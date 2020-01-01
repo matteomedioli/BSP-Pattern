@@ -1,5 +1,5 @@
 /**
- * \file superstep.cpp
+ * \file superstep.hpp
  * \author Matteo Medioli
  */
 
@@ -8,22 +8,22 @@
 
 #include <functional>
 #include <vector>
-#include <thread>
+#include <iostream>
+#include "../include/worker.hpp"
 
-template <typename T>
+template <typename T, typename F, typename ... Args>
 class SuperStep {
     private:
         int nw;
-        std::vector<std::vector<T>> chunks;
-        std::vector<std::thread> workers;
-        std::vector<int> destination_index;
+        std::vector<T> input;
+        std::vector<Worker<T,F,Args...>*> workers;              //vector of pointers
         std::vector<std::pair<int, std::vector<T>>> output;
 
     public:
-        SuperStep(int n, std::vector<int> destinations);
+
+        SuperStep(int n, std::function<F(Args...)> body);
         ~SuperStep();
-        template<typename F, typename ... Args>
-        int computation(std::function<F(Args...)> body);
+        int computation();
 
 };
 

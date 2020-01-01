@@ -1,25 +1,30 @@
+/**
+ * \file superstep.cpp
+ * \author Matteo Medioli
+ */
 #include "../include/superstep.hpp"
-#include<iostream>
 
-template<typename T>
 
-SuperStep<T>::SuperStep(int n, std::vector<int> destinations)
+template<typename T, typename F, typename ...Args>
+SuperStep<T,F,Args...>::SuperStep(int n, std::function<F(Args...)> body)
 {
     std::cout<<"Init Superstep"<<std::endl;
     nw=n;
-    destination_index=destinations;
-    chunks.reserve(nw);
-    workers.reserve(nw);
+    for (int i=0; i<n; i++)
+    {
+        Worker<int,void> * w = new Worker<int,void>(i,body);
+        workers.insert(workers.begin()+i, w);
+    }
     output.reserve(nw);
+
 }
 
-template<typename T>
-SuperStep<T>::~SuperStep()
+template<typename T, typename F, typename ...Args>
+SuperStep<T,F,Args...>::~SuperStep()
 {}
 
-template<typename T>
-template <typename F, typename ...Args>
-int SuperStep<T>::computation(std::function<F(Args...)> body)
+template<typename T, typename F, typename ...Args>
+int SuperStep<T,F,Args...>::computation()
 {
-    body();
+
 }
