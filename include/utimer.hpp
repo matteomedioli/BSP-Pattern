@@ -1,16 +1,16 @@
 /**
- * \file utimer.cpp
+ * \file utimer.hpp
  * \author Matteo Medioli
  */
 
-#ifndef U_TIMER
-#define U_TIMER
+#ifndef UTIMER_H
+#define UTIMER_H
 
 #include <iostream>
 #include <chrono>
 #include <mutex>
 
-class utimer {
+class Utimer {
 	private:
 		using usecs		= std::chrono::microseconds;
 		using msecs		= std::chrono::milliseconds;
@@ -21,8 +21,8 @@ class utimer {
 		std::string message;
 		
 	public:
-		utimer (const std::string m);
-		~utimer ();
+		Utimer (const std::string m);
+		~Utimer ();
 };
 
 #endif
