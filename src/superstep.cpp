@@ -11,10 +11,7 @@ SuperStep<T,F,Args...>::SuperStep(int n, std::function<F(Args...)> body)
     std::cout<<"Init Superstep"<<std::endl;
     nw=n;
     for (int i=0; i<n; i++)
-    {
-        Worker<int,void> * w = new Worker<int,void>(i,body);
-        workers.insert(workers.begin()+i, w);
-    }
+        workers.insert(workers.begin()+i, new Worker<int,void>(i,body));
     output.reserve(nw);
 
 }
