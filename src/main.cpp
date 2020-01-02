@@ -1,21 +1,26 @@
 #include "./superstep.cpp"
 #include "./utimer.cpp"
 #include "./worker.cpp"
+#include <algorithm>
 #include <random>
+#include <thread>
 
-std::vector<int> generate_data(int n, int min, int max)
+std::vector<int> generate_data(int n)
 {   
     std::vector<int> data;
     for(int i=0; i<n; i++)
-    {
+    {   
         std::random_device random_device;
         std::mt19937 random_engine(random_device());
-        std::uniform_int_distribution<int> distribution(min, max);
+        std::uniform_int_distribution<int> distribution(0, n);
         auto const randomNumber = distribution(random_engine);
         data.insert(data.begin()+i, randomNumber);
+        
     }
     return data;
 }
+
+
 
 int compare(const void* a, const void* b)   // comparison function
 {
@@ -25,16 +30,28 @@ int compare(const void* a, const void* b)   // comparison function
     if(arg1 > arg2) return 1;
     return 0;
 }
-
-
+template<typename T>
+void print_vector(std::vector<T> data)
+{
+    for ( T i:data)
+        std::cout<<i<<" ";
+        std::cout<<std::endl;
+}
+ 
 int main()
 {
-    std::vector<int> data_vector = generate_data(21,0,21);
-    int* data = &data_vector[0];
+    std::vector<int> data_vector = generate_data(10000);
+    int nw=64;
+    std::function<void(std::vector<int>)> dummy_body1 = [](std::vector<int> data) {};
+    std::function<void(std::vector<int>)> dummy_body2 = [](std::vector<int> data) {std::cout<<"DUMY2"<<std::endl;};
+    //  T_SEQ
+    Utimer *timer = new Utimer("std::sort:");
+    std::sort(data_vector.begin(), data_vector.end(), std::greater<int>());
+    timer->~Utimer();
+    //
+    Utimer *timer_ss = new Utimer("Superstep Generation:");
+    SuperStep<int,void,std::vector<int>> *s = new SuperStep<int,void,std::vector<int>>(nw, data_vector);
+    s->computation();
+    timer_ss->~Utimer();
 
-    int nw=3;
-
-    constexpr std::size_t size = sizeof(data)/sizeof(int);
-    std::function<void()> body = std::bind(std::qsort, data, size, sizeof(int), compare);
-    SuperStep<int,void>* s1 = new SuperStep<int,void>(nw, body);
 }

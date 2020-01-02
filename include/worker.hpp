@@ -10,6 +10,10 @@
 #include <vector>
 #include <thread>
 #include <iostream>
+#include "./superstep.hpp"
+
+template <typename T, typename F, typename ... Args>
+class SuperStep;
 
 template <typename T, typename F, typename ... Args>
 class Worker {
@@ -22,9 +26,10 @@ class Worker {
         std::pair<T,T> range;
 
     public:
-        Worker(int id, std::function<F(Args...)> body);
+        Worker(int id, SuperStep<T,F,Args...> *s, int nw);
         ~Worker();
-
+        void setThreadBody(std::function<F(Args...)> body);
+        void work();
 };
 
 
