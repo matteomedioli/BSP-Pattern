@@ -18,6 +18,7 @@ class SuperStep {
         int nw;
         std::vector<T> input;
         std::vector<std::vector<T>> chunks;
+        std::function<F(Args...)> thread_body;
         std::vector<Worker<T,F,Args...>*> workers;              //vector of pointers
         std::vector<std::pair<int, std::vector<T>>> output;
 
@@ -26,6 +27,7 @@ class SuperStep {
         ~SuperStep();
         int computation();
         std::vector<T> get_input();
+        int get_parallel_degree();
         void setThreadBody(std::function<F(Args...)> body);
 };
 

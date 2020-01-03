@@ -26,10 +26,11 @@ class Worker {
         std::pair<T,T> range;
 
     public:
-        Worker(int id, SuperStep<T,F,Args...> *s, int nw);
+        Worker(int id, SuperStep<T,F,Args...> *s);
         ~Worker();
+        int get_id();
         void setThreadBody(std::function<F(Args...)> body);
-        void work();
+        F work(Args...);
 };
 
 

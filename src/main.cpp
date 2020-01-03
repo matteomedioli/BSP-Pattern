@@ -21,7 +21,6 @@ std::vector<int> generate_data(int n)
 }
 
 
-
 int compare(const void* a, const void* b)   // comparison function
 {
     int arg1 = *reinterpret_cast<const int*>(a);
@@ -41,16 +40,17 @@ void print_vector(std::vector<T> data)
 int main()
 {
     std::vector<int> data_vector = generate_data(10000);
-    int nw=64;
-    std::function<void(std::vector<int>)> dummy_body1 = [](std::vector<int> data) {};
-    std::function<void(std::vector<int>)> dummy_body2 = [](std::vector<int> data) {std::cout<<"DUMY2"<<std::endl;};
+    int nw=16;
+    std::function<void(int)> hello = [](int i){std::cout<<"CIAO da WORKER "<<i<<std::endl;};
+
     //  T_SEQ
     Utimer *timer = new Utimer("std::sort:");
     std::sort(data_vector.begin(), data_vector.end(), std::greater<int>());
     timer->~Utimer();
     //
     Utimer *timer_ss = new Utimer("Superstep Generation:");
-    SuperStep<int,void,std::vector<int>> *s = new SuperStep<int,void,std::vector<int>>(nw, data_vector);
+    SuperStep<int,void,int> *s = new SuperStep<int,void,int>(nw, data_vector);
+    s->setThreadBody(hello);
     s->computation();
     timer_ss->~Utimer();
 
