@@ -39,19 +39,19 @@ void print_vector(std::vector<T> data)
  
 int main()
 {
-    std::vector<int> data_vector = generate_data(10000);
-    int nw=16;
-    std::function<void(int)> hello = [](int i){std::cout<<"CIAO da WORKER "<<i<<std::endl;};
-
+    std::vector<int> data_vector = generate_data(50000);
+    int nw=8;
     //  T_SEQ
-    Utimer *timer = new Utimer("std::sort:");
+    {
+    Utimer timer("std::sort:");
     std::sort(data_vector.begin(), data_vector.end(), std::greater<int>());
-    timer->~Utimer();
-    //
-    Utimer *timer_ss = new Utimer("Superstep Generation:");
-    SuperStep<int,void,int> *s = new SuperStep<int,void,int>(nw, data_vector);
-    s->setThreadBody(hello);
-    s->computation();
-    timer_ss->~Utimer();
+    }
 
+    {
+        Utimer timer_ss("Superstep Generation:");
+        std::function<void()> func = [](){std::cout<<"WORKING..."<<std::endl;};
+        SuperStep<int,void> s(nw, data_vector);
+        s.setThreadBody(func);
+        s.computation();
+    }
 }

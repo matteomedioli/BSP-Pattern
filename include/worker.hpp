@@ -27,10 +27,12 @@ class Worker {
 
     public:
         Worker(int id, SuperStep<T,F,Args...> *s);
+        Worker(const Worker& w);
+        Worker& operator=(Worker&& w);
         ~Worker();
         int get_id();
         void setThreadBody(std::function<F(Args...)> body);
-        F work(Args...);
+        void work();
 };
 
 

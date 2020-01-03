@@ -9,16 +9,15 @@ SuperStep<T,F,Args...>::SuperStep(int n, std::vector<T> data)
 {
     nw=n;
     input=data;
-    chunks.reserve(nw);
-    output.reserve(nw);
-    workers.reserve(nw);
     for (int i=0; i<n; i++)
         workers.insert(workers.begin()+i, new Worker<T,F,Args...>(i,this));
 }
 
 template<typename T, typename F, typename ...Args>
 SuperStep<T,F,Args...>::~SuperStep()
-{}
+{
+    std::cout<<"Destroy Superstep"<<std::endl;
+}
 
 template<typename T, typename F, typename ...Args>
 std::vector<T> SuperStep<T,F,Args...>::get_input()
@@ -43,7 +42,7 @@ template<typename T, typename F, typename ...Args>
 int SuperStep<T,F,Args...>::computation()
 {
     for (auto w: workers)
-        w->work(w->get_id());
+        w->work();
 }
 
 

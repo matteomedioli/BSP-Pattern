@@ -34,12 +34,12 @@ int Worker<T,F,Args...>::get_id()
 template<typename T, typename F, typename ...Args>
 void Worker<T,F,Args...>::setThreadBody(std::function<F(Args...)> b) 
 {
-    body=b;
-    
+    body=b; 
 }
 
 template<typename T, typename F, typename ...Args>
-F Worker<T,F,Args...>::work(Args... args)
+void Worker<T,F,Args...>::work()
 {
-     thread = std::thread{[this,args...](){ this->body(args...); } };
+     thread = std::thread{[this](){ this->body(); } };
+     thread.detach();
 }
