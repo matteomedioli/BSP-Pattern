@@ -20,6 +20,7 @@ class Worker {
     private:
         int id;
         SuperStep<T,F,Args...> *ss;
+        std::vector<T> ss_input;
         std::thread thread;
         std::function<F(Args...)> body;
         std::vector<T> input;
