@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <random>
 #include <thread>
+#include <mutex>
 
 std::vector<int> generate_data(int n)
 {   
@@ -39,19 +40,17 @@ void print_vector(std::vector<T> data)
  
 int main()
 {
-    std::vector<int> data_vector = generate_data(50000);
-    int nw=8;
-    //  T_SEQ
+    
+    std::vector<int> data_vector = generate_data(6);
+    print_vector(data_vector);
+    int nw=2;
     {
-    Utimer timer("std::sort:");
-    std::sort(data_vector.begin(), data_vector.end(), std::greater<int>());
-    }
-
-    {
-        Utimer timer_ss("Superstep Generation:");
-        std::function<void()> func = [](){std::cout<<"WORKING..."<<std::endl;};
-        SuperStep<int,void> s(nw, data_vector);
-        s.setThreadBody(func);
-        s.computation();
+        std::function<void(std::vector<int>*)> sort = [](std::vector<int> *data)
+        {
+            std::sort(data->begin(), data->end(), std::less<int>());
+        };
+        SuperStep<int,void,std::vector<int>*> s(nw, data_vector);
+        s.setThreadBody(sort);
+        s.computation(true);
     }
 }

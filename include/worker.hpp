@@ -19,20 +19,23 @@ template <typename T, typename F, typename ... Args>
 class Worker {
     private:
         int id;
+        SuperStep<T,F,Args...> *ss;
         std::thread thread;
         std::function<F(Args...)> body;
-        std::vector<T> chunk;
-        std::vector<T> sample;
-        std::pair<T,T> range;
+        std::vector<T> input;
+        std::vector<T> output;
+
 
     public:
         Worker(int id, SuperStep<T,F,Args...> *s);
-        Worker(const Worker& w);
-        Worker& operator=(Worker&& w);
+        Worker(const Worker&) = delete;
+        Worker(Worker &&other);
+        Worker& operator=(const Worker&) = delete; 
+        Worker& operator=(Worker&&) = delete;
         ~Worker();
         int get_id();
         void setThreadBody(std::function<F(Args...)> body);
-        void work();
+        void work(bool chunk);
 };
 
 
