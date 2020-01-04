@@ -11,6 +11,7 @@
 #include <mutex>
 #include <iostream>
 #include "./worker.hpp"
+#include "./utimer.hpp"
 
 
 template <typename T, typename F, typename ... Args>
@@ -21,7 +22,7 @@ class SuperStep {
         std::vector<std::vector<T>> chunks;
         std::function<F(Args...)> thread_body;
         std::vector<std::unique_ptr<Worker<T,F,Args...>>> workers;     //vector of pointers
-        std::vector<std::pair<int, std::vector<T>>> output;
+        std::vector<std::vector<T>> output;
 
     public:
         SuperStep(int n, std::vector<T> input);
@@ -30,7 +31,7 @@ class SuperStep {
         std::vector<T> get_input();
         int get_parallel_degree();
         void setThreadBody(std::function<F(Args...)> body);
-        std::mutex global_mutex;
+        std::mutex ss_mutex;
 };
 
 #endif

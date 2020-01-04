@@ -40,17 +40,26 @@ void print_vector(std::vector<T> data)
  
 int main()
 {
-    
-    std::vector<int> data_vector = generate_data(6);
-    print_vector(data_vector);
-    int nw=2;
+    int n=262144;
+    int nw=32;
+    std::vector<int> data_vector = generate_data(n);
+    std::function<std::vector<int>(std::vector<int>)> sort_and_separators = [](std::vector<int> data)
     {
-        std::function<void(std::vector<int>*)> sort = [](std::vector<int> *data)
-        {
-            std::sort(data->begin(), data->end(), std::less<int>());
-        };
-        SuperStep<int,void,std::vector<int>*> s(nw, data_vector);
-        s.setThreadBody(sort);
-        s.computation(true);
+        std::sort(data.begin(), data.end(), std::less<int>());
+
+        return data;
+    };
+
+    {
+        Utimer t("SEQ:");
+        std::sort(data_vector.begin(),data_vector.end(),std::less<int>());
     }
+
+    {
+        Utimer t("Superstep:");
+        SuperStep<int,std::vector<int>, std::vector<int>> s1(nw, data_vector);
+        s1.setThreadBody(sort_and_separators);
+        s1.computation(true);
+    }
+
 }

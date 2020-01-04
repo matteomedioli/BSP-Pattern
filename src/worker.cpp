@@ -62,7 +62,7 @@ void Worker<T,F,Args...>::work(bool chunk)
                 input=ss_input;
 
             //WORK ON INPUT (CHUNKED OR NOT)
-            body(&input);
+            output = body(input);
         }
     };
 }

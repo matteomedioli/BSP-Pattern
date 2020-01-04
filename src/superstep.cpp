@@ -13,7 +13,7 @@ SuperStep<T,F,Args...>::SuperStep(int n, std::vector<T> data)
     for (int i=0; i<n; i++)
     {
         std::unique_ptr<Worker<T,F,Args...>> w_ptr(new Worker<T,F,Args...>(i,this));
-        workers.push_back(std::move(w_ptr));
+        workers.emplace_back(std::move(w_ptr));
     }
 }
 
@@ -48,7 +48,7 @@ template<typename T, typename F, typename ...Args>
 int SuperStep<T,F,Args...>::computation(bool chunk)
 {
     for (auto &w: workers)
-        w->work(chunk);
+            w->work(chunk);
 }
 
 
