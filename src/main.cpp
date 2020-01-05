@@ -6,6 +6,7 @@
 #include <thread>
 #include <mutex>
 
+
 std::vector<int> generate_data(int n)
 {   
     std::vector<int> data;
@@ -22,14 +23,6 @@ std::vector<int> generate_data(int n)
 }
 
 
-int compare(const void* a, const void* b)   // comparison function
-{
-    int arg1 = *reinterpret_cast<const int*>(a);
-    int arg2 = *reinterpret_cast<const int*>(b);
-    if(arg1 < arg2) return -1;
-    if(arg1 > arg2) return 1;
-    return 0;
-}
 template<typename T>
 void print_vector(std::vector<T> data)
 {
@@ -40,26 +33,20 @@ void print_vector(std::vector<T> data)
  
 int main()
 {
-    int n=262144;
-    int nw=32;
-    std::vector<int> data_vector = generate_data(n);
-    std::function<std::vector<int>(std::vector<int>)> sort_and_separators = [](std::vector<int> data)
+    int n=64;
+    int nw=8;
+    std::vector<int> data_vector = generate_data(n);    
+    std::function<std::vector<int>(std::vector<int>)> sort_and_separators = [n,nw](std::vector<int> data)
     {
         std::sort(data.begin(), data.end(), std::less<int>());
-
-        return data;
+        std::vector<int> sample(nw-1);
+        sample.insert(sample.begin(),*data.begin());
+        sample.insert(sample.end(), *std::prev(data.end()));
+        return sample;
     };
-
-    {
-        Utimer t("SEQ:");
-        std::sort(data_vector.begin(),data_vector.end(),std::less<int>());
-    }
-
     {
         Utimer t("Superstep:");
-        SuperStep<int,std::vector<int>, std::vector<int>> s1(nw, data_vector);
-        s1.setThreadBody(sort_and_separators);
-        s1.computation(true);
+        SuperStep<int> s1(nw, data_vector);
+        s1.computation(sort_and_separators,true);
     }
-
 }

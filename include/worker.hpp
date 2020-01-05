@@ -12,31 +12,30 @@
 #include <iostream>
 #include "./superstep.hpp"
 
-template <typename T, typename F, typename ... Args>
+template <typename T>
 class SuperStep;
 
-template <typename T, typename F, typename ... Args>
+template <typename T>
 class Worker {
     private:
         int id;
-        SuperStep<T,F,Args...> *ss;
+        SuperStep<T> *ss;
         std::vector<T> ss_input;
         std::thread thread;
-        std::function<F(Args...)> body;
         std::vector<T> input;
         std::vector<T> output;
 
 
     public:
-        Worker(int id, SuperStep<T,F,Args...> *s);
+        Worker(int id, SuperStep<T> *s);
         Worker(const Worker&) = delete;
         Worker(Worker &&other);
         Worker& operator=(const Worker&) = delete; 
         Worker& operator=(Worker&&) = delete;
         ~Worker();
         int get_id();
-        void setThreadBody(std::function<F(Args...)> body);
-        void work(bool chunk);
+        template<typename F,typename ...Args>
+        void work(std::function<F(Args...)> body, bool chunk);
 };
 
 

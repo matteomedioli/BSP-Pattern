@@ -6,47 +6,42 @@
 #include "../include/worker.hpp"
 #include "../include/superstep.hpp"
 
-template<typename T, typename F, typename ...Args>
-Worker<T,F,Args...>::Worker(int i, SuperStep<T,F,Args...> *s)
+template<typename T>
+Worker<T>::Worker(int i, SuperStep<T> *s)
 {
     id=i;
     ss=s;
     ss_input=s->get_input();
 }
 
-template<typename T, typename F, typename ...Args>
-Worker<T,F,Args...>::Worker(Worker<T,F,Args...> &&other)
+template<typename T>
+Worker<T>::Worker(Worker<T> &&other)
     :   thread(std::move(other.thread)),
         id(std::move(other.id)),
-        body(std::move(other.body)),
         input(std::move(other.input)),
         ss(std::move(other.ss)),
         ss_input(std::move(other.ss_input))
 {}
 
-template<typename T, typename F, typename ...Args>
-Worker<T,F,Args...>::~Worker()
+template<typename T>
+Worker<T>::~Worker()
 {
     if(thread.joinable())
         thread.join();
 }
 
-template<typename T, typename F, typename ...Args>
-int Worker<T,F,Args...>::get_id() 
+template<typename T>
+int Worker<T>::get_id() 
 {
     return id;    
 }
 
-template<typename T, typename F, typename ...Args>
-void Worker<T,F,Args...>::setThreadBody(std::function<F(Args...)> b) 
-{
-    body=b; 
-}
 
-template<typename T, typename F, typename ...Args>
-void Worker<T,F,Args...>::work(bool chunk)
+template<typename T>
+template<typename F, typename ...Args>
+void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
 {
-    thread = std::thread{[this,chunk]()
+    thread = std::thread{[this,body,chunk]()
         { 
             //Prepare input of worker: chunk or full
             if(chunk)
@@ -63,6 +58,23 @@ void Worker<T,F,Args...>::work(bool chunk)
 
             //WORK ON INPUT (CHUNKED OR NOT)
             output = body(input);
+            
+            //PRINT BLOCKS
+            /*
+            {
+          
+                std::unique_lock<std::mutex> lock(ss->ss_mutex);
+                std::cout<<"WORKER"<<id<<" input:";
+                for(T i:input)
+                    std::cout<<i<<" ";
+                std::cout<<std::endl;
+
+                std::cout<<"WORKER"<<id<<" output:";
+                for(T i:output)
+                    std::cout<<i<<" ";
+                std::cout<<std::endl<<std::endl;
+            }
+            */
         }
     };
 }
