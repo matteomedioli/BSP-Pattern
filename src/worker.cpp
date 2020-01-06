@@ -60,9 +60,7 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
             output = body(input);
             
             //PRINT BLOCKS
-            /*
             {
-          
                 std::unique_lock<std::mutex> lock(ss->ss_mutex);
                 std::cout<<"WORKER"<<id<<" input:";
                 for(T i:input)
@@ -74,7 +72,6 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
                     std::cout<<i<<" ";
                 std::cout<<std::endl<<std::endl;
             }
-            */
         }
     };
 }
