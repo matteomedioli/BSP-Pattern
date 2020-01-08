@@ -5,7 +5,8 @@
 
 #ifndef BARRIER_H
 #define BARRIER_H
-
+#include <iostream>
+#include <cassert>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
@@ -14,14 +15,12 @@ class Barrier
 {
     private:
         std::atomic_int	active_workers;
-        std::mutex mutex_barrier;
-        std::condition_variable cv_barrier ;
-
+        std::condition_variable barrier_cv ;
+        std::mutex barrier_mutex;
     public:
-        Barrier();
-        ~Barrier ();
-        int increase();
-        int decrease();
+        Barrier(int workers);
+        ~Barrier() noexcept;
+        void wait();
 };
 
 #endif

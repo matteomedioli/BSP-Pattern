@@ -11,6 +11,8 @@
 #include <thread>
 #include <iostream>
 #include "superstep.hpp"
+#include "barrier.hpp"
+
 template <typename T>
 class SuperStep;
 
@@ -19,6 +21,7 @@ class Worker {
     private:
         int id;
         SuperStep<T> *ss;
+        Barrier *barrier;
         std::vector<T> ss_input;
         std::thread thread;
         std::vector<T> input;
@@ -36,7 +39,8 @@ class Worker {
         void send();
         template<typename F,typename ...Args>
         void work(std::function<F(Args...)> body, bool chunk);
-        void communicate();
+        template<typename F,typename ...Args>
+        void send(std::function<F(Args...)> body);
 };
 
 

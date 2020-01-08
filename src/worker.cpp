@@ -25,7 +25,6 @@ Worker<T>::Worker(Worker<T> &&other)
 template<typename T>
 Worker<T>::~Worker()
 {
-    ss->sync_barrier.decrease();
     if(thread.joinable())
         thread.join();
 }
@@ -42,6 +41,7 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
 {
     thread = std::thread{[this,body,chunk]()
         { 
+
             //Prepare input of worker: chunk or full
             if(chunk)
             {
@@ -62,7 +62,12 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
 }
 
 template<typename T>
-void Worker<T>::send() //ALREADY OPEN COMPUTATION THREAD. TO KILL COMPUTATION THREAD BEFORE START COMMUNICATION THREAD
+template<typename F,typename ...Args>
+void Worker<T>::send(std::function<F(Args...)> body) //ALREADY OPEN COMPUTATION THREAD. TO KILL COMPUTATION THREAD BEFORE START COMMUNICATION THREAD
 {
-    
+    thread = std::thread{[this,body]()
+        { 
+            body(input);
+        }
+    };
 }

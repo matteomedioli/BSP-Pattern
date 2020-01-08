@@ -5,7 +5,7 @@
 #include "../include/superstep.hpp"
 
 template<typename T>
-SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n),input(data),sync_barrier()
+SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n),input(data)
 {
     workers.reserve(nw);
     for (int i=0; i<n; i++)
@@ -32,6 +32,7 @@ std::vector<std::vector<T>> SuperStep<T>::get_output()
     return output;
 }
 
+
 template<typename T>
 int SuperStep<T>::get_parallel_degree()
 {
@@ -40,20 +41,19 @@ int SuperStep<T>::get_parallel_degree()
 
 template<typename T>
 template<typename F,typename ...Args>
-int SuperStep<T>::computation(std::function<F(Args...)> f, bool chunk)
+int SuperStep<T>::computation(std::function<F(Args...)> body, bool chunk)
 {
     for (auto &w: workers)
-    {
-        w->work(f, chunk);
-        sync_barrier.increase();
+    {   
+        w->work(body,chunk);
     }
-
 }
 
 template<typename T>
-void SuperStep<T>::communication()
+template<typename F,typename ...Args>
+void SuperStep<T>::communication(std::function<F(Args...)> body)
 {
     for (auto &w: workers)
-            w->send();
+            w->send(body);
 }
 

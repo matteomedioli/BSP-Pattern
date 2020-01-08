@@ -23,6 +23,7 @@ class SuperStep {
         std::vector<T> input;
         std::vector<std::unique_ptr<Worker<T>>> workers;     //vector of pointers
         std::vector<std::vector<T>> output;
+        std::unique_ptr<Barrier> barrier;
 
     public:
         SuperStep(int n, std::vector<T> input);
@@ -31,9 +32,10 @@ class SuperStep {
         std::vector<std::vector<T>> get_output();
         int get_parallel_degree();
         template<typename F,typename ...Args>
-        int computation(std::function<F(Args...)> b,bool chunk);
-        void communication();
-        Barrier sync_barrier;
+        int computation(std::function<F(Args...)> b, bool chunk);
+        template<typename F,typename ...Args>
+        void communication(std::function<F(Args...)> b);
+        
 };
 
 #endif

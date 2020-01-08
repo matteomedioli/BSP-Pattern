@@ -5,33 +5,32 @@
 
 #include "../include/barrier.hpp"
 
-Barrier::Barrier()
+
+Barrier::Barrier(int workers):active_workers(workers)
 {
-    active_workers=0;
+    assert(0 != active_workers);
 }
 
-Barrier::~Barrier()
+Barrier::~Barrier() noexcept
 {
-    cv_barrier.notify_all ();
+    barrier_cv.notify_all();
+    assert(0 == active_workers);
 }
 
-int Barrier::increase()
+
+void Barrier::wait()
 {
-    active_workers+=1;
-    return active_workers;
-}
-
-int Barrier::decrease()
-{
-    std::unique_lock<std::mutex> lock(mutex_barrier);
-	if (active_workers == 0)
-        return 0;
-
-    active_workers-=1;
-	if (active_workers == 0)
-        cv_barrier.notify_all();
-	else
-		cv_barrier.wait(lock);
-
-    return active_workers;
+    std::unique_lock< std::mutex > lock(barrier_mutex);
+    assert(0 != active_workers);
+    if (0 == --active_workers)
+    {
+        std::cout<<"DELETE LAST"<<std::endl;
+        std::cout<<"RELEASE"<<std::endl;
+        barrier_cv.notify_all();
+    }
+    else
+    {
+        std::cout<<"DELETE & WAIT"<<std::endl;
+        barrier_cv.wait(lock, [this]() { return 0 == active_workers; });
+    }
 }
