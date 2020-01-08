@@ -10,16 +10,17 @@
 #include <vector>
 #include <mutex>
 #include <iostream>
-#include "./worker.hpp"
-#include "./utimer.hpp"
+#include "worker.hpp"
+#include "barrier.hpp"
 
+template <typename T>
+class Worker;
 
 template <typename T>
 class SuperStep {
     private:
         int nw;
         std::vector<T> input;
-        std::vector<std::vector<T>> chunks;
         std::vector<std::unique_ptr<Worker<T>>> workers;     //vector of pointers
         std::vector<std::vector<T>> output;
 
@@ -27,10 +28,12 @@ class SuperStep {
         SuperStep(int n, std::vector<T> input);
         ~SuperStep();
         std::vector<T> get_input();
+        std::vector<std::vector<T>> get_output();
         int get_parallel_degree();
         template<typename F,typename ...Args>
         int computation(std::function<F(Args...)> b,bool chunk);
-        std::mutex ss_mutex;
+        void communication();
+        Barrier sync_barrier;
 };
 
 #endif

@@ -10,8 +10,7 @@
 #include <vector>
 #include <thread>
 #include <iostream>
-#include "./superstep.hpp"
-
+#include "superstep.hpp"
 template <typename T>
 class SuperStep;
 
@@ -34,8 +33,10 @@ class Worker {
         Worker& operator=(Worker&&) = delete;
         ~Worker();
         int get_id();
+        void send();
         template<typename F,typename ...Args>
         void work(std::function<F(Args...)> body, bool chunk);
+        void communicate();
 };
 
 

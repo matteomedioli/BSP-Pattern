@@ -4,7 +4,6 @@
  */
 
 #include "../include/worker.hpp"
-#include "../include/superstep.hpp"
 
 template<typename T>
 Worker<T>::Worker(int i, SuperStep<T> *s)
@@ -26,6 +25,7 @@ Worker<T>::Worker(Worker<T> &&other)
 template<typename T>
 Worker<T>::~Worker()
 {
+    ss->sync_barrier.decrease();
     if(thread.joinable())
         thread.join();
 }
@@ -35,7 +35,6 @@ int Worker<T>::get_id()
 {
     return id;    
 }
-
 
 template<typename T>
 template<typename F, typename ...Args>
@@ -58,20 +57,12 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
 
             //WORK ON INPUT (CHUNKED OR NOT)
             output = body(input);
-            
-            //PRINT BLOCKS
-            {
-                std::unique_lock<std::mutex> lock(ss->ss_mutex);
-                std::cout<<"WORKER"<<id<<" input:";
-                for(T i:input)
-                    std::cout<<i<<" ";
-                std::cout<<std::endl;
-
-                std::cout<<"WORKER"<<id<<" output:";
-                for(T i:output)
-                    std::cout<<i<<" ";
-                std::cout<<std::endl<<std::endl;
-            }
         }
     };
+}
+
+template<typename T>
+void Worker<T>::send() //ALREADY OPEN COMPUTATION THREAD. TO KILL COMPUTATION THREAD BEFORE START COMMUNICATION THREAD
+{
+    
 }
