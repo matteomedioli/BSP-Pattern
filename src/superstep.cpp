@@ -7,6 +7,7 @@
 template<typename T>
 SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n), input(data)
 {
+    Utimer t("T_GEN_SUPERSTEP: ");
     workers.reserve(nw);
     for (int i=0; i<n; i++)
     {

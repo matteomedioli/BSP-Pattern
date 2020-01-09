@@ -12,6 +12,7 @@
 #include <iostream>
 #include "worker.hpp"
 #include "barrier.hpp"
+#include "../include/utimer.hpp"
 
 template <typename T>
 class Worker;
