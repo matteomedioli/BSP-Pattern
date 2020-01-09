@@ -25,8 +25,16 @@ Worker<T>::Worker(Worker<T> &&other)
 template<typename T>
 Worker<T>::~Worker()
 {
+    join();
+}
+
+template<typename T>
+void Worker<T>::join()
+{
     if(thread.joinable())
+    {
         thread.join();
+    }
 }
 
 template<typename T>
@@ -54,11 +62,12 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
             }
             else
                 input=ss_input;
-
-            //WORK ON INPUT (CHUNKED OR NOT)
+            if(input[0]==10)
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
             output = body(input);
         }
     };
+
 }
 
 template<typename T>
@@ -67,7 +76,8 @@ void Worker<T>::send(std::function<F(Args...)> body) //ALREADY OPEN COMPUTATION 
 {
     thread = std::thread{[this,body]()
         { 
-            body(input);
+            body(output);
         }
     };
 }
+

@@ -5,7 +5,7 @@
 #include "../include/superstep.hpp"
 
 template<typename T>
-SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n),input(data)
+SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n), input(data)
 {
     workers.reserve(nw);
     for (int i=0; i<n; i++)
@@ -24,6 +24,12 @@ template<typename T>
 std::vector<T> SuperStep<T>::get_input()
 {
     return input;
+}
+
+template<typename T>
+void SuperStep<T>::set_barrier(Barrier* b)
+{
+    barrier.reset(b);
 }
 
 template<typename T>
@@ -57,3 +63,12 @@ void SuperStep<T>::communication(std::function<F(Args...)> body)
             w->send(body);
 }
 
+template<typename T>
+void SuperStep<T>::sync()
+{
+    barrier->wait();
+    for (auto &w: workers)
+    {   
+        w->join();
+    }
+}

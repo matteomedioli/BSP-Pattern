@@ -35,6 +35,8 @@ class SuperStep {
         int computation(std::function<F(Args...)> b, bool chunk);
         template<typename F,typename ...Args>
         void communication(std::function<F(Args...)> b);
+        void set_barrier(Barrier *b);
+        void sync();
         
 };
 

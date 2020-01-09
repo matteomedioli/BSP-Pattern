@@ -36,7 +36,7 @@ class Worker {
         Worker& operator=(Worker&&) = delete;
         ~Worker();
         int get_id();
-        void send();
+        void join();
         template<typename F,typename ...Args>
         void work(std::function<F(Args...)> body, bool chunk);
         template<typename F,typename ...Args>

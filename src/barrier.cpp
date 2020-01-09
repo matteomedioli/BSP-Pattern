@@ -14,7 +14,6 @@ Barrier::Barrier(int workers):active_workers(workers)
 Barrier::~Barrier() noexcept
 {
     barrier_cv.notify_all();
-    assert(0 == active_workers);
 }
 
 
@@ -24,13 +23,11 @@ void Barrier::wait()
     assert(0 != active_workers);
     if (0 == --active_workers)
     {
-        std::cout<<"DELETE LAST"<<std::endl;
-        std::cout<<"RELEASE"<<std::endl;
+
         barrier_cv.notify_all();
     }
     else
     {
-        std::cout<<"DELETE & WAIT"<<std::endl;
         barrier_cv.wait(lock, [this]() { return 0 == active_workers; });
     }
 }
