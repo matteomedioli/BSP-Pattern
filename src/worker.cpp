@@ -71,11 +71,13 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
 
 template<typename T>
 template<typename F,typename ...Args>
-void Worker<T>::send(std::function<F(Args...)> body) //ALREADY OPEN COMPUTATION THREAD. TO KILL COMPUTATION THREAD BEFORE START COMMUNICATION THREAD
+void Worker<T>::send(std::function<F(Args...)> body, std::vector<std::pair<int,int>> protocol)
 {
-    thread = std::thread{[this,body]()
+    thread = std::thread{[this,body,protocol]()
         { 
-            body(output);
+            auto it = std::find_if( protocol.begin(), protocol.end(),[this](const std::pair<int, int>& element){return element.first == id;});
+            int index = it->second;
+            ss->get_output()[index]=body(output);
         }
     };
 }

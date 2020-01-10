@@ -10,6 +10,7 @@
 #include <vector>
 #include <thread>
 #include <iostream>
+#include <algorithm>
 #include "superstep.hpp"
 #include "barrier.hpp"
 
@@ -40,7 +41,7 @@ class Worker {
         template<typename F,typename ...Args>
         void work(std::function<F(Args...)> body, bool chunk);
         template<typename F,typename ...Args>
-        void send(std::function<F(Args...)> body);
+        void send(std::function<F(Args...)> body, std::vector<std::pair<int,int>> protocol);
 };
 
 

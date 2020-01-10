@@ -9,6 +9,8 @@ SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n), input(data)
 {
     Utimer t("T_GEN_SUPERSTEP: ");
     workers.reserve(nw);
+    output.reserve(nw);
+    output.resize(nw,{0});
     for (int i=0; i<n; i++)
     {
         std::unique_ptr<Worker<T>> w_ptr(new Worker<T>(i,this));
@@ -34,7 +36,7 @@ void SuperStep<T>::set_barrier(Barrier* b)
 }
 
 template<typename T>
-std::vector<std::vector<T>> SuperStep<T>::get_output()
+std::vector<std::vector<T>>& SuperStep<T>::get_output()
 {
     return output;
 }
@@ -58,10 +60,10 @@ int SuperStep<T>::computation(std::function<F(Args...)> body, bool chunk)
 
 template<typename T>
 template<typename F,typename ...Args>
-void SuperStep<T>::communication(std::function<F(Args...)> body)
+void SuperStep<T>::communication(std::function<F(Args...)> body, std::vector<std::pair<int,int>> protocol)
 {
     for (auto &w: workers)
-            w->send(body);
+            w->send(body, protocol);
 }
 
 template<typename T>

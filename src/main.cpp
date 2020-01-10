@@ -25,7 +25,7 @@ std::vector<int> generate_data(int n)
  
 int main()
 {
-    int n=1117649;
+    int n=16807;
     int nw=7;
     std::vector<int> data_vector = generate_data(n);
     //std::vector<int> data_vector{21,18,16,1,3,20,2,10,15,4,17,5,9,19,6,11,14,7,12,8,13}; 
@@ -48,10 +48,10 @@ int main()
 
 /* DEFINE COMMUNICATION BARRIER AND BODY COMMUNICATION THREAD */
     std::unique_ptr<Barrier> comm_barrier(new Barrier(nw+1));
-    std::function<void(std::vector<int>)> send = [&comm_barrier](std::vector<int> data)
+    std::function<std::vector<int>(std::vector<int>)> send = [&comm_barrier](std::vector<int> data)
     {
-
             comm_barrier->wait();
+            return data;
     };
 
 
@@ -73,10 +73,22 @@ int main()
             s1.sync();
         }
         s1.set_barrier(comm_barrier.get());
+
+        std::vector<std::pair<int,int>> protocol;
+        for(int i=0; i<nw; i++)
+            protocol.push_back(std::make_pair(i,i));
+
         {
             Utimer t("COMM_S1:");
-            s1.communication(send);
+            s1.communication(send,protocol);
             s1.sync();
+        }
+    
+        for (auto v:s1.get_output())
+        {
+            for (auto i:v)
+            std::cout<<i<<" ";
+            std::cout<<std::endl;
         }
     }
 }

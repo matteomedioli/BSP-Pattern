@@ -26,19 +26,20 @@ class SuperStep {
         std::vector<std::vector<T>> output;
         std::unique_ptr<Barrier> barrier;
 
+
     public:
         SuperStep(int n, std::vector<T> input);
         ~SuperStep();
         std::vector<T> get_input();
-        std::vector<std::vector<T>> get_output();
+        std::vector<std::vector<T>>& get_output();
         int get_parallel_degree();
         template<typename F,typename ...Args>
         int computation(std::function<F(Args...)> b, bool chunk);
         template<typename F,typename ...Args>
-        void communication(std::function<F(Args...)> b);
+        void communication(std::function<F(Args...)> b, std::vector<std::pair<int,int>> protocol);
         void set_barrier(Barrier *b);
-        void sync();
-        
+        void sync();      
+        std::mutex output_mutex;  
 };
 
 #endif
