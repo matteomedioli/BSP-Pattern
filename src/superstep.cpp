@@ -10,11 +10,12 @@ SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n), input(data)
     Utimer t("T_GEN_SUPERSTEP: ");
     workers.reserve(nw);
     output.reserve(nw);
-    output.resize(nw,{0});
     for (int i=0; i<n; i++)
     {
         std::unique_ptr<Worker<T>> w_ptr(new Worker<T>(i,this));
         workers.emplace_back(std::move(w_ptr));
+        std::shared_ptr<SharedVector<T>> sh(new SharedVector<T>());
+        output.emplace_back(std::move(sh));
     }
 }
 
@@ -36,9 +37,15 @@ void SuperStep<T>::set_barrier(std::shared_ptr<Barrier> b)
 }
 
 template<typename T>
-std::vector<std::vector<T>>& SuperStep<T>::get_output()
+std::shared_ptr<SharedVector<T>>& SuperStep<T>::get_output(int i)
 {
-    return output;
+    return output[i];
+}
+
+template<typename T>
+std::shared_ptr<Barrier>& SuperStep<T>::get_barrier()
+{
+    return barrier;
 }
 
 
@@ -60,10 +67,10 @@ int SuperStep<T>::computation(std::function<F(Args...)> body, bool chunk)
 
 template<typename T>
 template<typename F,typename ...Args>
-void SuperStep<T>::communication(std::function<F(Args...)> body, std::vector<std::pair<int,int>> protocol)
+void SuperStep<T>::communication(std::function<F(Args...)> body, std::vector<std::pair<int,std::vector<int>>> protocol)
 {
     for (auto &w: workers)
-            w->send(body, protocol);
+        w->send(body, protocol);
 }
 
 template<typename T>
@@ -75,3 +82,5 @@ void SuperStep<T>::sync()
         w->join();
     }
 }
+
+

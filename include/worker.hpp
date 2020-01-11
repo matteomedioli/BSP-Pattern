@@ -41,7 +41,7 @@ class Worker {
         template<typename F,typename ...Args>
         void work(std::function<F(Args...)> body, bool chunk);
         template<typename F,typename ...Args>
-        void send(std::function<F(Args...)> body, std::vector<std::pair<int,int>> protocol);
+        void send(std::function<F(Args...)> body, std::vector<std::pair<int,std::vector<int>>> protocol);
 };
 
 

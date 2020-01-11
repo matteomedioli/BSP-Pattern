@@ -64,6 +64,7 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
                 input=ss_input;
 
             output = body(input);
+            ss->get_barrier()->wait();
         }
     };
 
@@ -71,14 +72,16 @@ void Worker<T>::work(std::function<F(Args...)> body, bool chunk)
 
 template<typename T>
 template<typename F,typename ...Args>
-void Worker<T>::send(std::function<F(Args...)> body, std::vector<std::pair<int,int>> protocol)
+void Worker<T>::send(std::function<F(Args...)> body, std::vector<std::pair<int,std::vector<int>>> protocol)
 {
     thread = std::thread{[this,body,protocol]()
         { 
-            auto it = std::find_if( protocol.begin(), protocol.end(),[this](const std::pair<int, int>& element){return element.first == id;});
-            int index = it->second;
-            ss->get_output()[index]=body(output);
-        }
+            auto it = std::find_if( protocol.begin(), protocol.end(),[this](const std::pair<int, std::vector<int>>& element){return element.first == id;});
+            std::vector<int> destination = it->second;
+            for(auto des : destination)
+            ss->get_output(des)->append(body(output));
+            ss->get_barrier()->wait();
+        }   
     };
 }
 
