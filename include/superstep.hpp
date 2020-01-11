@@ -24,7 +24,7 @@ class SuperStep {
         std::vector<T> input;
         std::vector<std::unique_ptr<Worker<T>>> workers;     //vector of pointers
         std::vector<std::vector<T>> output;
-        std::unique_ptr<Barrier> barrier;
+        std::shared_ptr<Barrier> barrier;
 
 
     public:
@@ -37,7 +37,7 @@ class SuperStep {
         int computation(std::function<F(Args...)> b, bool chunk);
         template<typename F,typename ...Args>
         void communication(std::function<F(Args...)> b, std::vector<std::pair<int,int>> protocol);
-        void set_barrier(Barrier *b);
+        void set_barrier(std::shared_ptr<Barrier> b);
         void sync();      
         std::mutex output_mutex;  
 };

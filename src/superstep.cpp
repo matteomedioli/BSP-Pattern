@@ -20,8 +20,7 @@ SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n), input(data)
 
 template<typename T>
 SuperStep<T>::~SuperStep()
-{
-}
+{}
 
 template<typename T>
 std::vector<T> SuperStep<T>::get_input()
@@ -30,9 +29,10 @@ std::vector<T> SuperStep<T>::get_input()
 }
 
 template<typename T>
-void SuperStep<T>::set_barrier(Barrier* b)
+void SuperStep<T>::set_barrier(std::shared_ptr<Barrier> b)
 {
-    barrier.reset(b);
+    
+    barrier=b;
 }
 
 template<typename T>
