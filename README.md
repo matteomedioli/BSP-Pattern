@@ -1,2 +1,2 @@
 # BSP-Pattern
-Bulk Synchronous Parallel (BSP) parallel programming implementation
+Bulk Synchronous Parallel (BSP) - parallel pattern implementation
