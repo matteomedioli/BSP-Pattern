@@ -7,40 +7,85 @@
 #include "../include/worker.hpp"
 #include "worker.cpp"
 #include "../include/sharedvect.hpp"
-#include "sharedvect.cpp"
+
 
 std::vector<int> generate_data(int n)
 {   
     Utimer t("RANDOM VECTOR GENERATION: ");
     std::vector<int> data;
-    for(int i=0; i<n; i++)
-    {   
-        std::random_device random_device;
-        std::mt19937 random_engine(random_device());
-        std::uniform_int_distribution<int> distribution(0, n);
-        auto const randomNumber = distribution(random_engine);
-        data.insert(data.begin()+i, randomNumber);
-        
+    for (unsigned i = 0; i < n; ++i)
+    {
+        unsigned j = rand() % (i + 1);
+
+        if (j < i)
+        {
+            data.push_back(data[j]);
+            data[j] = i;
+        }
+        else
+            data.push_back(i);
     }
     return data;
 }
  
-int main()
+int main(int argc, char * argv[])
 {
-    int n=21;
-    int nw=3;
-    //std::vector<int> data_vector = generate_data(n);
-    std::vector<int> data_vector{21,18,16,1,3,20,2,10,15,4,17,5,9,19,6,11,14,7,12,8,13}; 
-
-/* COMPUTE TSEQ */
+    if(argc!=3)
     {
-        std::vector<int> seq=generate_data(n);
-        Utimer t("T_SEQ: ");
-        std::sort(seq.begin(), seq.end(), std::less<int>());
+        std::cout<<"WRONG ARGUMENT EXCEPT: must give n (number of elements) and nw (parallel activities)"<<std::endl;
+        return 0;
     }
 
 
-/* DEFINE COMPUTATION BODY THREAD */
+
+/* GET ARGS */
+    int n=atoi(argv[1]);
+    int nw=atoi(argv[2]);
+
+
+/* GENERATE DATA VECTOR */
+    std::vector<int> data_vector = generate_data(n);
+    std::cout<<"INPUT VECTOR: ";
+    for(auto v : data_vector)
+        std::cout<<v<<" ";
+    std::cout<<std::endl<<std::endl;
+
+
+/* COMPUTE TSEQ */
+    {
+        std::vector<int> seq=data_vector;
+        std::cout<<"INPUT VECTOR SEQ: ";
+        for(auto v : data_vector)
+            std::cout<<v<<" ";
+        std::cout<<std::endl<<std::endl;
+        Utimer t("T_SEQ: ");
+        std::sort(seq.begin(), seq.end(), std::less<int>());
+    }
+    
+    std::cout<<std::endl;
+
+/* DEFINE THREADS BODY*/
+
+    /* SORT COMPUTATION */
+    std::function<std::vector<int>(std::vector<int>)> sort = [](std::vector<int> data)
+    {
+            std::sort(data.begin(), data.end(), std::less<int>());
+            return data;
+    };
+
+    /* PASS COMPUTATION */
+    std::function<std::vector<int>(std::vector<int>)> void_comp = [](std::vector<int> data)
+    {
+            return data;
+    };
+
+    /* PASS COMMUNICATION */
+    std::function<std::vector<int>(std::vector<int>, int dest)> void_comm = [](std::vector<int> data, int dest)
+    {
+            return data;
+    };
+
+    /* SORT & SEPARATORS */
     std::function<std::vector<int>(std::vector<int>)> sort_and_separators = [nw](std::vector<int> data)
     {
             std::sort(data.begin(), data.end(), std::less<int>());
@@ -54,24 +99,7 @@ int main()
             return sample;
     };
 
-/* DEFINE COMPUTATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>)> sort = [](std::vector<int> data)
-    {
-            std::sort(data.begin(), data.end(), std::less<int>());
-            return data;
-    };
-
-/* DEFINE COMMUNICATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>)> void_comp = [](std::vector<int> data)
-    {
-            return data;
-    };
-/* DEFINE COMMUNICATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>, int dest)> void_comm = [](std::vector<int> data, int dest)
-    {
-            return data;
-    };
-
+    /* BOUND COMPUTATION AND FILTERED COMMUNICATION */
     std::function<std::vector<int>(std::vector<int>,int)> distribute_by_bound = [sort_and_separators,nw](std::vector<int> data, int dest)
     {
         std::vector<int> filtered;
@@ -85,7 +113,10 @@ int main()
         return filtered;
     };
 
+
 /* COMMUNICATION PROTOCOLS */
+
+    /* 1-1 PROTOCOL */
     std::vector<std::pair<int,std::vector<int>>> to_itself;
     for(int i=0; i<nw; i++)
     {
@@ -93,8 +124,7 @@ int main()
         to_itself.push_back(std::make_pair(i,d));
     }
 
-
-    /* COMMUNICATION PROTOCOLS */
+    /* 1-N PROTOCOL */
     std::vector<std::pair<int,std::vector<int>>> to_all;
     std::vector<int> d;
     for(int i=0; i<nw; i++)
@@ -106,10 +136,11 @@ int main()
 /* BARRIER */
     std::shared_ptr<Barrier> barrier(new Barrier(nw+1));
 
+/* -------------------- SUPERSTEP SEQUENCE -------------------- */
 
 /* SUPERSTEP 1 */
-    std::cout<<std::endl;
     SuperStep<int> s1(nw, data_vector);
+
         //S1 COMPUTATION PHASE
         s1.set_barrier(barrier);
         {
@@ -120,6 +151,7 @@ int main()
 
         //RESET BARRIER FOR COMMUNICATION
         barrier.reset(new Barrier(nw+1));
+
         //S1 COMMUNICATION PHASE
         s1.set_barrier(barrier);
         {
@@ -127,16 +159,20 @@ int main()
             s1.communication(void_comm,to_itself);
             s1.sync();
         }
+
+    //RESET BARRIER
     barrier.reset(new Barrier(nw+1));
 
+    //PRINT OUTPUT
     for(auto a:s1.get_results())
     std::cout<<a<<" ";
-    std::cout<<std::endl;
+    std::cout<<std::endl<<std::endl;
+
 
 
 /* SUPERSTEP 2 */
-    std::cout<<std::endl;
     SuperStep<int> s2(nw, s1.get_results());
+
         //S1 COMPUTATION PHASE
         s2.set_barrier(barrier);
         {
@@ -147,23 +183,28 @@ int main()
 
         //RESET BARRIER FOR COMMUNICATION
         barrier.reset(new Barrier(nw+1));
+
         //S1 COMMUNICATION PHASE
         s2.set_barrier(barrier);
         {
             Utimer t("COMM_S2:");
-            s2.communication(distribute_by_bound,to_itself);
+            s2.communication(distribute_by_bound,to_all);
             s2.sync();
         }
-
+        
+    //RESET BARRIER FOR COMMUNICATION
     barrier.reset(new Barrier(nw+1));
 
+    //PRINT OUTPUT
     for(auto a:s2.get_results())
     std::cout<<a<<" ";
-    std::cout<<std::endl;
+    std::cout<<std::endl<<std::endl;
+
+
 
 /* SUPERSTEP 3 */
-    std::cout<<std::endl;
-    SuperStep<int> s3(nw, s2.get_results());
+    SuperStep<int> s3(nw, data_vector);
+
         //S1 COMPUTATION PHASE
         s3.set_barrier(barrier);
         {
@@ -174,6 +215,7 @@ int main()
 
         //RESET BARRIER FOR COMMUNICATION
         barrier.reset(new Barrier(nw+1));
+
         //S1 COMMUNICATION PHASE
         s3.set_barrier(barrier);
         {
@@ -182,12 +224,12 @@ int main()
             s3.sync();
         }
 
+    //RESET BARRIER 
     barrier.reset(new Barrier(nw+1));
-    std::vector<int> result = s3.get_results();
-    
-    for(auto a:result)
-    std::cout<<a<<" ";
-    std::cout<<std::endl;
 
+    //PRINT OUTPUT
+    for(auto a:s3.get_results())
+        std::cout<<a<<" ";
+    std::cout<<std::endl<<std::endl;
 }
 
