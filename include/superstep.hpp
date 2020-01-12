@@ -44,6 +44,7 @@ class SuperStep {
         void communication(std::function<F(Args...)> b, std::vector<std::pair<int,std::vector<int>>> protocol);
         void set_barrier(std::shared_ptr<Barrier> b);
         void sync();
+        std::vector<T> get_results();
 };
 
 #endif

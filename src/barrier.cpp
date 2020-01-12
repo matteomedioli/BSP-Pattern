@@ -6,7 +6,7 @@
 #include "../include/barrier.hpp"
 
 
-Barrier::Barrier(int workers, std::string n):active_workers(workers),name(n)
+Barrier::Barrier(int workers):active_workers(workers)
 {
     assert(0 != active_workers);
 }
@@ -31,9 +31,4 @@ void Barrier::wait()
     {
         barrier_cv.wait(lock, [this]() { return 0 == active_workers; });
     }
-}
-
-std::string Barrier::get_name()
-{
-    return name;
 }

@@ -32,7 +32,6 @@ std::vector<T> SuperStep<T>::get_input()
 template<typename T>
 void SuperStep<T>::set_barrier(std::shared_ptr<Barrier> b)
 {
-    
     barrier=b;
 }
 
@@ -83,4 +82,13 @@ void SuperStep<T>::sync()
     }
 }
 
+
+template<typename T>
+std::vector<T> SuperStep<T>::get_results()
+{
+    std::vector<T> result;
+    for(int i=0; i<nw; i++)
+        result.insert(std::end(result), std::begin(output[i]->get_vector()), std::end(output[i]->get_vector()));
+    return result;
+}
 

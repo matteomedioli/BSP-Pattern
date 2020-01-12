@@ -20,10 +20,9 @@ class Barrier
         std::condition_variable barrier_cv ;
         std::mutex barrier_mutex;
     public:
-        Barrier(int workers, std::string name);
+        Barrier(int workers);
         ~Barrier() noexcept;
         void wait();
-        std::string get_name();
 };
 
 #endif
