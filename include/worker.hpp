@@ -12,7 +12,6 @@
 #include <iostream>
 #include <algorithm>
 #include "superstep.hpp"
-#include "barrier.hpp"
 
 template <typename T>
 class SuperStep;
@@ -22,7 +21,6 @@ class Worker {
     private:
         int id;
         SuperStep<T> *ss;
-        Barrier *barrier;
         std::vector<T> ss_input;
         std::thread thread;
         std::vector<T> input;
