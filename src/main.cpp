@@ -44,19 +44,20 @@ int main(int argc, char * argv[])
 
 /* GENERATE DATA VECTOR */
     std::vector<int> data_vector = generate_data(n);
-    std::cout<<"INPUT VECTOR: ";
+    /*std::cout<<"INPUT VECTOR: ";
     for(auto v : data_vector)
         std::cout<<v<<" ";
     std::cout<<std::endl<<std::endl;
+    */
 
 
 /* COMPUTE TSEQ */
     {
         std::vector<int> seq=data_vector;
-        std::cout<<"INPUT VECTOR SEQ: ";
+        /*std::cout<<"INPUT VECTOR SEQ: ";
         for(auto v : data_vector)
             std::cout<<v<<" ";
-        std::cout<<std::endl<<std::endl;
+        std::cout<<std::endl<<std::endl;*/
         Utimer t("T_SEQ: ");
         std::sort(seq.begin(), seq.end(), std::less<int>());
     }
@@ -213,8 +214,10 @@ int main(int argc, char * argv[])
     barrier.reset(new Barrier(nw+1));
     std::vector<int> result = s3.get_results();
     
+    /*
     for(auto a:result)
     std::cout<<a<<" ";
     std::cout<<std::endl;
+    */
 
 }
