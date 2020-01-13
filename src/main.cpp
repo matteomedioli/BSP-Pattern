@@ -12,28 +12,51 @@ std::vector<int> generate_data(int n)
 {   
     Utimer t("RANDOM VECTOR GENERATION: ");
     std::vector<int> data;
-    for(int i=0; i<n; i++)
-    {   
-        std::random_device random_device;
-        std::mt19937 random_engine(random_device());
-        std::uniform_int_distribution<int> distribution(0, n);
-        auto const randomNumber = distribution(random_engine);
-        data.insert(data.begin()+i, randomNumber);
-        
+    for (unsigned i = 0; i < n; ++i)
+    {
+        unsigned j = rand() % (i + 1);
+
+        if (j < i)
+        {
+            data.push_back(data[j]);
+            data[j] = i;
+        }
+        else
+            data.push_back(i);
     }
     return data;
 }
-
-int main()
+ 
+int main(int argc, char * argv[])
 {
-    int n=21;
-    int nw=3;
-    //std::vector<int> data_vector = generate_data(n);
-    std::vector<int> data_vector{21,18,16,1,3,20,2,10,15,4,17,5,9,19,6,11,14,7,12,8,13}; 
+    if(argc!=3)
+    {
+        std::cout<<"WRONG ARGUMENT EXCEPT: must give n (number of elements) and nw (parallel activities)"<<std::endl;
+        return 0;
+    }
+
+
+
+/* GET ARGS */
+    int n=atoi(argv[1]);
+    int nw=atoi(argv[2]);
+
+
+/* GENERATE DATA VECTOR */
+    std::vector<int> data_vector = generate_data(n);
+    std::cout<<"INPUT VECTOR: ";
+    for(auto v : data_vector)
+        std::cout<<v<<" ";
+    std::cout<<std::endl<<std::endl;
+
 
 /* COMPUTE TSEQ */
     {
-        std::vector<int> seq=generate_data(n);
+        std::vector<int> seq=data_vector;
+        std::cout<<"INPUT VECTOR SEQ: ";
+        for(auto v : data_vector)
+            std::cout<<v<<" ";
+        std::cout<<std::endl<<std::endl;
         Utimer t("T_SEQ: ");
         std::sort(seq.begin(), seq.end(), std::less<int>());
     }
