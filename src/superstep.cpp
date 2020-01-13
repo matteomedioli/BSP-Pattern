@@ -68,8 +68,12 @@ template<typename T>
 template<typename F,typename ...Args>
 void SuperStep<T>::communication(std::function<F(Args...)> body, std::vector<std::pair<int,std::vector<int>>> protocol)
 {
+    std::mutex mutex_print;
     for (auto &w: workers)
+    {
         w->send(body, protocol);
+    }
+
 }
 
 template<typename T>

@@ -23,7 +23,7 @@ std::vector<int> generate_data(int n)
     }
     return data;
 }
- 
+
 int main()
 {
     int n=21;
@@ -66,15 +66,21 @@ int main()
             return data;
     };
 /* DEFINE COMMUNICATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>, int dest)> void_comm = [](std::vector<int> data, int dest)
+    std::function<std::vector<int>(std::vector<int>, int id, int dest)> void_comm = [](std::vector<int> data,int id, int dest)
     {
             return data;
     };
-
-    std::function<std::vector<int>(std::vector<int>,int)> distribute_by_bound = [sort_and_separators,nw](std::vector<int> data, int dest)
+    std::mutex mutex_print;
+    std::function<std::vector<int>(std::vector<int>,int,int)> distribute_by_bound = [sort_and_separators,nw,&mutex_print,&data_vector](std::vector<int> output, int id, int dest)
     {
+        std::unique_lock<std::mutex> lock(mutex_print);
         std::vector<int> filtered;
-        std::vector<int> boundaries=sort_and_separators(data);
+        std::vector<int> boundaries=sort_and_separators(output);
+        // CHUNCK DISTRIBUTION
+        int delta = data_vector.size()/nw;
+        auto first = data_vector.begin() + id*delta;
+        auto last = data_vector.begin() + ((id+1)*delta);
+        std::vector<int> data(first,last);
         int infer = boundaries[dest];
         int super = boundaries[dest+1];
         if (dest!=nw-1)

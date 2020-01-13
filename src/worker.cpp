@@ -79,7 +79,7 @@ void Worker<T>::send(std::function<F(Args...)> body, std::vector<std::pair<int,s
             auto it = std::find_if( protocol.begin(), protocol.end(),[this](const std::pair<int, std::vector<int>>& element){return element.first == id;});
             std::vector<int> destination = it->second;
             for(auto dest : destination)
-            ss->get_output(dest)->append(body(output,dest));
+                ss->get_output(dest)->append(body(output,id,dest));
             ss->get_barrier()->wait();
         }   
     };
