@@ -27,5 +27,32 @@ class SharedVector
         std::vector<T>& get_vector();
 };
 
+template<typename T>
+SharedVector<T>::SharedVector():vector()
+{}
+
+template<typename T>
+SharedVector<T>::SharedVector(std::vector<T> v):vector(v)
+{}
+
+template<typename T>
+SharedVector<T>::~SharedVector()
+{
+}
+
+template<typename T>
+void SharedVector<T>::append(std::vector<T> v)
+{
+    std::unique_lock<std::mutex> lock (vector_mutex);
+    //TODO ERROR: QUI ARRIVA UNA COPIA DI V, CERCA GLI ITERATOR DELA COPIA E FA ANDARE TUTTO A TROIE
+    //TODO: PASSARE BY REFRENCE VETTORE DI RITORNO DELLA SEND
+    vector.insert(std::end(vector), std::begin(v), std::end(v));
+}
+
+template<typename T>
+std::vector<T>& SharedVector<T>::get_vector()
+{
+    return vector;
+}
 
 #endif
