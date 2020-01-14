@@ -49,7 +49,6 @@ class SuperStep {
 template<typename T>
 SuperStep<T>::SuperStep(int n, std::vector<T> data, bool chunk): nw(n)
 {
-    Utimer t("T_GEN_SUPERSTEP FROM PLAIN VECTOR: ");
     workers.reserve(nw);
     input.reserve(nw);
     for (int id=0; id<n; id++)
@@ -76,7 +75,6 @@ SuperStep<T>::SuperStep(int n, std::vector<T> data, bool chunk): nw(n)
 template<typename T>
 SuperStep<T>::SuperStep(int n, std::vector<std::vector<T>> data, bool merge) : nw(n)
 {
-    Utimer t("T_GEN_SUPERSTEP FROM VECT OF VECT: ");
     workers.reserve(nw);
     input.reserve(nw);
     for (int id=0; id<n; id++)
@@ -144,8 +142,6 @@ void SuperStep<T>::sync()
 template<typename T>
 std::vector<std::vector<T>>& SuperStep<T>::get_results(std::vector<std::vector<T>>& results)
 {
-
-    Utimer t("RETRIEVE STD::VECTOR<VECTOR> FROM OUTPUT SHARED VECTOR: ");
     results.clear();
     results.reserve(nw);
     for(int id=0; id<nw; id++)

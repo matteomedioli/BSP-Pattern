@@ -7,7 +7,6 @@
 
 std::vector<int> generate_data(int n)
 {   
-    Utimer t("RANDOM VECTOR GENERATION: ");
     std::vector<int> data;
     for (unsigned i = 1; i < n+1; ++i)
     {
@@ -26,9 +25,9 @@ std::vector<int> generate_data(int n)
  
 int main(int argc, char * argv[])
 {
-    if(argc!=3)
+    if(argc<3)
     {
-        std::cout<<"WRONG ARGUMENT EXCEPT: must give n (number of elements) and nw (parallel activities)"<<std::endl;
+        std::cout<<"WRONG ARGUMENT EXCEPT: must give n (number of elements) and nw (parallel activities) - optional: verbose (0,1)"<<std::endl;
         return 0;
     }
 
@@ -37,15 +36,14 @@ int main(int argc, char * argv[])
 /* GET ARGS */
     int n=atoi(argv[1]);
     int nw=atoi(argv[2]);
-
+    int verbose=0;
+    if(argc == 4)
+        verbose=atoi(argv[3]);
+    
 
 /* GENERATE DATA VECTOR */ 
     std::vector<int> data_vector = generate_data(n);
-    std::cout<<"INPUT VECTOR: ";
-    for(auto v : data_vector)
-        std::cout<<v<<" ";
-    std::cout<<std::endl<<std::endl;
-    
+  
 
 /* COMPUTE TSEQ */
     {
@@ -128,14 +126,15 @@ int main(int argc, char * argv[])
 
 
 std::vector<std::vector<int>> output;
-
+{
+    Utimer t("TISKIN SORT - BSP MODEL:");
 /* SUPERSTEP 1 */
-    std::cout<<std::endl;
     SuperStep<int> s1(nw,data_vector,true);
         //S1 COMPUTATION PHASE
         s1.reset_barrier();
         {
-            Utimer t("COMP_S1:");
+            if(verbose)
+                Utimer t("COMP_S1:");
             s1.computation(sort_and_separators);
         }
 
@@ -143,50 +142,52 @@ std::vector<std::vector<int>> output;
         s1.reset_barrier();
 
         {
-            Utimer t("COMM_S1:");
+            if(verbose)
+                Utimer t("COMM_S1:");
             s1.communication(void_comm,to_itself);
         }
 
     output=s1.get_results(output);
-    std::cout<<std::endl;
 
 /* SUPERSTEP 2 */
     SuperStep<int> s2(nw, output, true);
         //S1 COMPUTATION PHASE
         s2.reset_barrier();
-        {
-            Utimer t("COMP_S2:");
+        {   
+            if(verbose)
+                Utimer t("COMP_S2:");
             s2.computation(void_comp);
         }
 
         //S1 COMMUNICATION PHASE
         s2.reset_barrier();
         {
-            Utimer t("COMM_S2:");
+            if(verbose)
+                Utimer t("COMM_S2:");
             s2.communication(distribute_by_bound,to_all);
         }
     
     output=s2.get_results(output);
-    std::cout<<std::endl;
 
 /* SUPERSTEP 3 */
     SuperStep<int> s3(nw, s2.get_results(output), false);
         //S1 COMPUTATION PHASE
         s3.reset_barrier();
         {
-            Utimer t("COMP_S3:");
+            if(verbose)
+                Utimer t("COMP_S3:");
             s3.computation(sort);
         }
         //S1 COMMUNICATION PHASE
         s3.reset_barrier();
         {
-            Utimer t("COMM_S3:");
+            if(verbose)
+                Utimer t("COMM_S3:");
             s3.communication(void_comm,to_itself);
         }
 
     output=s3.get_results(output);
     std::vector<int> result = flatten(output);
-    for(auto el : result)
-        std::cout<<el<<" ";
-    std::cout<<std::endl;
+}
+
 }
