@@ -12,7 +12,7 @@
 #include <iostream>
 #include <algorithm>
 #include "barrier.hpp"
-
+#include "sharedvect.hpp"
 template <typename T>
 class Worker {
     private:
@@ -66,7 +66,7 @@ class Worker {
                 { 
                     if(chunk)
                     {
-                        // CHUNCK DISTRIBUTION
+                        // CHUNCK DISTRIBUTIONworkers
                         int delta = input.size()/nw;
                         auto first = input.begin() + id*delta;
                         auto last = input.begin() + ((id+1)*delta);
@@ -79,17 +79,21 @@ class Worker {
             };
 
         }
-
+        
         template<typename F, typename ...Args>
-        std::vector<T>& send(int dest,std::function<F(Args...)> body, Barrier* barrier)
+        void send(std::function<F(Args...)> body, std::vector<std::pair<int,std::vector<int>>> protocol, Barrier* barrier, const std::vector<std::shared_ptr<SharedVector<T>>>& shared_vector)
         {
-            thread = std::thread{[this,body, dest,barrier]()
-                { 
-                    barrier->wait();
-                    std::vector<T> res;
-                    return body(output,id,dest);
-                }
-            };
+            thread = std::thread{[this,body,protocol,barrier,shared_vector]()
+            { 
+                auto it = std::find_if( protocol.begin(), protocol.end(),[this](const std::pair<int, std::vector<int>>& element){return element.first == id;});
+                std::vector<int> destination = it->second;
+                for(auto dest : destination)
+                    {
+                        shared_vector[dest]->append(body(output,id,dest));
+                        std::cout<<" send FILTERED from "<<id<<" TO "<<shared_vector[dest]->get_id()<<std::endl<<std::endl;
+                    }
+                barrier->wait();
+            }};
         }
 };
 

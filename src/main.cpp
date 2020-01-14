@@ -9,7 +9,7 @@ std::vector<int> generate_data(int n)
 {   
     Utimer t("RANDOM VECTOR GENERATION: ");
     std::vector<int> data;
-    for (unsigned i = 0; i < n; ++i)
+    for (unsigned i = 1; i < n+1; ++i)
     {
         unsigned j = rand() % (i + 1);
 
@@ -92,8 +92,10 @@ int main(int argc, char * argv[])
             return data;
     };
 
-    std::function<std::vector<int>(std::vector<int>,int,int)> distribute_by_bound = [sort_and_separators,nw,&data_vector](std::vector<int> output, int id, int dest)
+    std::mutex print;
+    std::function<std::vector<int>(std::vector<int>,int,int)> distribute_by_bound = [sort_and_separators,nw,&print,&data_vector](std::vector<int> output, int id, int dest)
     {
+        std::unique_lock<std::mutex> lock(print);
         std::vector<int> boundaries=sort_and_separators(output);
         std::vector<int> filtered;
         // CHUNCK DISTRIBUTION
@@ -101,16 +103,27 @@ int main(int argc, char * argv[])
         auto first = data_vector.begin() + id*delta;
         auto last = data_vector.begin() + ((id+1)*delta);
         std::vector<int> data(first,last);
+    
+        std::cout<<"1) ANALIZE INPUT FROM "<<id<<" TO "<<dest<<": ";
+        for(auto e : data)
+            std::cout<<e<<" ";
+        std::cout<<std::endl;
+
         int infer = boundaries[dest];
         int super = boundaries[dest+1];
+
+        std::cout<<"2) RANGE: ";
+        std::cout<<"["<<infer<<" , "<<super<<"]"<<std::endl;
+
         if (dest!=nw-1)
             std::copy_if (data.begin(), data.end(), std::back_inserter(filtered),[infer,super](int i){return  infer<=i && i<super;});
         else
             std::copy_if (data.begin(), data.end(), std::back_inserter(filtered),[infer,super](int i){return  infer<=i && i<=super;});
 
-        for(auto a : filtered)
-        std::cout<<a<<" ";
-        std::cout<<std::endl;
+        std::cout<<"3) FILTERED OUTPUT: ";
+        for(auto e : filtered)
+            std::cout<<e<<" ";
+        
         return filtered;
     };
 
@@ -132,10 +145,6 @@ int main(int argc, char * argv[])
         to_all.push_back(std::make_pair(i,d));
     
 
-/* BARRIER */
-    std::shared_ptr<Barrier> barrier(new Barrier(nw+1));
-
-
 /* SUPERSTEP 1 */
     std::cout<<std::endl;
     SuperStep<int> s1(nw, data_vector);
@@ -144,7 +153,6 @@ int main(int argc, char * argv[])
         {
             Utimer t("COMP_S1:");
             s1.computation(sort_and_separators,true);
-            s1.sync();
         }
 
         //S1 COMMUNICATION PHASE
@@ -152,7 +160,6 @@ int main(int argc, char * argv[])
         {
             Utimer t("COMM_S1:");
             s1.communication(void_comm,to_itself);
-            s1.sync();
         }
 
     for(auto a:s1.get_results())
@@ -164,19 +171,17 @@ int main(int argc, char * argv[])
     std::cout<<std::endl;
     SuperStep<int> s2(nw, s1.get_results());
         //S1 COMPUTATION PHASE
-        s1.reset_barrier();
+        s2.reset_barrier();
         {
             Utimer t("COMP_S2:");
             s2.computation(void_comp,false);
-            s2.sync();
         }
 
         //S1 COMMUNICATION PHASE
-        s1.reset_barrier();
+        s2.reset_barrier();
         {
             Utimer t("COMM_S2:");
             s2.communication(distribute_by_bound,to_all);
-            s2.sync();
         }
 
 
@@ -188,28 +193,23 @@ int main(int argc, char * argv[])
     std::cout<<std::endl;
     SuperStep<int> s3(nw, s2.get_results());
         //S1 COMPUTATION PHASE
-        s1.reset_barrier();
+        s3.reset_barrier();
         {
             Utimer t("COMP_S3:");
             s3.computation(sort,true);
-            s3.sync();
         }
 
         //S1 COMMUNICATION PHASE
-        s1.reset_barrier();
+        s3.reset_barrier();
         {
             Utimer t("COMM_S3:");
             s3.communication(void_comm,to_itself);
-            s3.sync();
         }
 
-    barrier.reset(new Barrier(nw+1));
     std::vector<int> result = s3.get_results();
     
-    /*
     for(auto a:result)
     std::cout<<a<<" ";
     std::cout<<std::endl;
-    */
 
 }

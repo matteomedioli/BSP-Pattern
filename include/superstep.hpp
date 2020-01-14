@@ -11,8 +11,6 @@
 #include <mutex>
 #include <iostream>
 #include "worker.hpp"
-#include "barrier.hpp"
-#include "sharedvect.hpp"
 #include "utimer.hpp"
 
 
@@ -23,16 +21,12 @@ class SuperStep {
         std::vector<T> input;
         std::vector<std::unique_ptr<Worker<T>>> workers;     //vector of pointers
         Barrier barrier;
-        std::vector<std::unique_ptr<SharedVector<T>>> output;
+        std::vector<std::shared_ptr<SharedVector<T>>> output;
 
 
     public:
         SuperStep(int n, std::vector<T> input);
         ~SuperStep();
-        std::vector<T> get_input();
-        std::shared_ptr<Barrier>& get_barrier();
-        std::shared_ptr<SharedVector<T>>& get_output(int i);
-        int get_parallel_degree();
         template<typename F,typename ...Args>
         int computation(std::function<F(Args...)> b, bool chunk);
         template<typename F,typename ...Args>
@@ -52,7 +46,7 @@ SuperStep<T>::SuperStep(int n, std::vector<T> data): nw(n), input(data)
     {
         std::unique_ptr<Worker<T>> w_ptr(new Worker<T>(i,input));
         workers.emplace_back(std::move(w_ptr));
-        std::unique_ptr<SharedVector<T>> sh(new SharedVector<T>());
+        std::unique_ptr<SharedVector<T>> sh(new SharedVector<T>(i));
         output.emplace_back(std::move(sh));
     }
 }
@@ -69,25 +63,6 @@ void SuperStep<T>::reset_barrier()
 }
 
 template<typename T>
-std::shared_ptr<SharedVector<T>>& SuperStep<T>::get_output(int i)
-{
-    return output[i];
-}
-
-template<typename T>
-std::shared_ptr<Barrier>& SuperStep<T>::get_barrier()
-{
-    return barrier;
-}
-
-
-template<typename T>
-int SuperStep<T>::get_parallel_degree()
-{
-    return nw;
-}
-
-template<typename T>
 template<typename F,typename ...Args>
 int SuperStep<T>::computation(std::function<F(Args...)> body, bool chunk)
 {
@@ -95,6 +70,7 @@ int SuperStep<T>::computation(std::function<F(Args...)> body, bool chunk)
     {   
         workers[id]->work(nw,body,chunk,&barrier);
     }
+    sync();
 }
 
 template<typename T>
@@ -103,13 +79,9 @@ void SuperStep<T>::communication(std::function<F(Args...)> body, std::vector<std
 {
     for (int id=0; id<nw; id++)
     {
-        auto it = std::find_if( protocol.begin(), protocol.end(),[this,id](const std::pair<int, std::vector<int>>& element){return element.first == id;});
-        std::vector<int> destination = it->second;
-        for(auto dest : destination)
-        {
-            output[dest]->append(workers[id]->send(dest,body,&barrier));
-        }
+       workers[id]->send(body,protocol,&barrier,output);
     }
+    sync();
 }
 
 template<typename T>

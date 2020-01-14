@@ -10,10 +10,6 @@ Barrier::Barrier()
 {
 }
 
-Barrier::Barrier(int workers):active_workers(workers)
-{
-}
-
 
 Barrier::~Barrier() noexcept
 {
@@ -26,15 +22,12 @@ void Barrier::wait()
 {
     std::unique_lock< std::mutex > lock(barrier_mutex);
     assert(0 != active_workers);
-    std::cout<<"[BARRIER]: exec "<<4-(active_workers)<<" workers."<<std::endl;
     if (0 == --active_workers)
     {
-        std::cout<<"[BARRIER]: reach "<<active_workers<<" workers, RELEASE ALL."<<std::endl;
         barrier_cv.notify_all();
     }
     else
     {
-        std::cout<<"[BARRIER]: waiting "<<active_workers<<" workers."<<std::endl;
         barrier_cv.wait(lock, [this]() { return 0 == active_workers; });
     }
     
@@ -43,6 +36,8 @@ void Barrier::wait()
 void Barrier::reset(int n)
 {
     active_workers=n;
+    barrier_mutex.unlock();
+    barrier_cv.notify_all();
 }
 
 

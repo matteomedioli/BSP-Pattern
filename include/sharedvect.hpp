@@ -17,18 +17,20 @@ template<typename T>
 class SharedVector
 {
     private:
+        int id;
         std::vector<T> vector;
         std::mutex vector_mutex;
     public:
-        SharedVector();
+        SharedVector(int);
         SharedVector(std::vector<T>);
         ~SharedVector();
+        int get_id();
         void append(std::vector<T>);
         std::vector<T>& get_vector();
 };
 
 template<typename T>
-SharedVector<T>::SharedVector():vector()
+SharedVector<T>::SharedVector(int id):vector(), id(id)
 {}
 
 template<typename T>
@@ -38,6 +40,12 @@ SharedVector<T>::SharedVector(std::vector<T> v):vector(v)
 template<typename T>
 SharedVector<T>::~SharedVector()
 {
+}
+
+template<typename T>
+int SharedVector<T>::get_id()
+{
+    return id;
 }
 
 template<typename T>

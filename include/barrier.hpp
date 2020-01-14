@@ -10,7 +10,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-#include <string>
 
 class Barrier
 {
@@ -20,7 +19,6 @@ class Barrier
         std::mutex barrier_mutex;
     public:
         Barrier();
-        Barrier(int workers);
         ~Barrier() noexcept;
         void wait();
         void reset(int n);
