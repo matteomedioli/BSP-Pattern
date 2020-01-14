@@ -20,6 +20,7 @@ class SharedVector
         int id;
         std::vector<T> vector;
         std::mutex vector_mutex;
+
     public:
         SharedVector(int);
         SharedVector(std::vector<T>);
@@ -50,10 +51,8 @@ int SharedVector<T>::get_id()
 
 template<typename T>
 void SharedVector<T>::append(std::vector<T> v)
-{
-    std::unique_lock<std::mutex> lock (vector_mutex);
-    //TODO ERROR: QUI ARRIVA UNA COPIA DI V, CERCA GLI ITERATOR DELA COPIA E FA ANDARE TUTTO A TROIE
-    //TODO: PASSARE BY REFRENCE VETTORE DI RITORNO DELLA SEND
+{   
+    std::unique_lock<std::mutex> lock(vector_mutex);
     vector.insert(std::end(vector), std::begin(v), std::end(v));
 }
 

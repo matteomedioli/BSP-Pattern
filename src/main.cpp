@@ -39,29 +39,24 @@ int main(int argc, char * argv[])
     int nw=atoi(argv[2]);
 
 
-/* GENERATE DATA VECTOR */
+/* GENERATE DATA VECTOR */ 
     std::vector<int> data_vector = generate_data(n);
-    /*std::cout<<"INPUT VECTOR: ";
+    std::cout<<"INPUT VECTOR: ";
     for(auto v : data_vector)
         std::cout<<v<<" ";
     std::cout<<std::endl<<std::endl;
-    */
-
+    
 
 /* COMPUTE TSEQ */
     {
         std::vector<int> seq=data_vector;
-        /*std::cout<<"INPUT VECTOR SEQ: ";
-        for(auto v : data_vector)
-            std::cout<<v<<" ";
-        std::cout<<std::endl<<std::endl;*/
         Utimer t("T_SEQ: ");
         std::sort(seq.begin(), seq.end(), std::less<int>());
     }
 
 
 /* DEFINE COMPUTATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>)> sort_and_separators = [nw](std::vector<int> data)
+    ComputationFunction sort_and_separators = [nw](std::vector<int> data)
     {
             std::sort(data.begin(), data.end(), std::less<int>());
             std::vector<int> sample(nw-1);
@@ -74,28 +69,27 @@ int main(int argc, char * argv[])
             return sample;
     };
 
-/* DEFINE COMPUTATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>)> sort = [](std::vector<int> data)
+    ComputationFunction sort = [](std::vector<int> data)
     {
             std::sort(data.begin(), data.end(), std::less<int>());
             return data;
     };
 
-/* DEFINE COMMUNICATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>)> void_comp = [](std::vector<int> data)
-    {
-            return data;
-    };
-/* DEFINE COMMUNICATION BODY THREAD */
-    std::function<std::vector<int>(std::vector<int>, int id, int dest)> void_comm = [&](std::vector<int> data,int id, int dest)
+
+    ComputationFunction void_comp = [](std::vector<int> data)
     {
             return data;
     };
 
-    std::mutex print;
-    std::function<std::vector<int>(std::vector<int>,int,int)> distribute_by_bound = [sort_and_separators,nw,&print,&data_vector](std::vector<int> output, int id, int dest)
+
+/* DEFINE COMMUNICATION BODY THREAD */
+    CommunicationFunction void_comm = [](std::vector<int> data,int id, int dest)
     {
-        std::unique_lock<std::mutex> lock(print);
+            return data;
+    };
+
+    CommunicationFunction distribute_by_bound = [sort_and_separators,nw,&data_vector](std::vector<int> output, int id, int dest)
+    {
         std::vector<int> boundaries=sort_and_separators(output);
         std::vector<int> filtered;
         // CHUNCK DISTRIBUTION
@@ -103,32 +97,19 @@ int main(int argc, char * argv[])
         auto first = data_vector.begin() + id*delta;
         auto last = data_vector.begin() + ((id+1)*delta);
         std::vector<int> data(first,last);
-    
-        std::cout<<"1) ANALIZE INPUT FROM "<<id<<" TO "<<dest<<": ";
-        for(auto e : data)
-            std::cout<<e<<" ";
-        std::cout<<std::endl;
 
-        int infer = boundaries[dest];
-        int super = boundaries[dest+1];
-
-        std::cout<<"2) RANGE: ";
-        std::cout<<"["<<infer<<" , "<<super<<"]"<<std::endl;
+        int inf = boundaries[dest];
+        int sup = boundaries[dest+1];
 
         if (dest!=nw-1)
-            std::copy_if (data.begin(), data.end(), std::back_inserter(filtered),[infer,super](int i){return  infer<=i && i<super;});
+            std::copy_if (data.begin(), data.end(), std::back_inserter(filtered),[inf,sup](int i){return  inf<=i && i<sup;});
         else
-            std::copy_if (data.begin(), data.end(), std::back_inserter(filtered),[infer,super](int i){return  infer<=i && i<=super;});
-
-        std::cout<<"3) FILTERED OUTPUT: ";
-        for(auto e : filtered)
-            std::cout<<e<<" ";
-        
+            std::copy_if (data.begin(), data.end(), std::back_inserter(filtered),[inf,sup](int i){return  inf<=i && i<=sup;});
         return filtered;
     };
 
 /* COMMUNICATION PROTOCOLS */
-    std::vector<std::pair<int,std::vector<int>>> to_itself;
+    CommunicationProtocol to_itself;
     for(int i=0; i<nw; i++)
     {
         std::vector<int> d{i};
@@ -137,44 +118,45 @@ int main(int argc, char * argv[])
 
 
     /* COMMUNICATION PROTOCOLS */
-    std::vector<std::pair<int,std::vector<int>>> to_all;
+    CommunicationProtocol to_all;
+
     std::vector<int> d;
     for(int i=0; i<nw; i++)
         d.push_back(i);
     for(int i=0; i<nw; i++)
         to_all.push_back(std::make_pair(i,d));
-    
+
+
+std::vector<std::vector<int>> output;
 
 /* SUPERSTEP 1 */
     std::cout<<std::endl;
-    SuperStep<int> s1(nw, data_vector);
+    SuperStep<int> s1(nw,data_vector,true);
         //S1 COMPUTATION PHASE
         s1.reset_barrier();
         {
             Utimer t("COMP_S1:");
-            s1.computation(sort_and_separators,true);
+            s1.computation(sort_and_separators);
         }
 
         //S1 COMMUNICATION PHASE
         s1.reset_barrier();
+
         {
             Utimer t("COMM_S1:");
             s1.communication(void_comm,to_itself);
         }
 
-    for(auto a:s1.get_results())
-    std::cout<<a<<" ";
+    output=s1.get_results(output);
     std::cout<<std::endl;
-
 
 /* SUPERSTEP 2 */
-    std::cout<<std::endl;
-    SuperStep<int> s2(nw, s1.get_results());
+    SuperStep<int> s2(nw, output, true);
         //S1 COMPUTATION PHASE
         s2.reset_barrier();
         {
             Utimer t("COMP_S2:");
-            s2.computation(void_comp,false);
+            s2.computation(void_comp);
         }
 
         //S1 COMMUNICATION PHASE
@@ -183,22 +165,18 @@ int main(int argc, char * argv[])
             Utimer t("COMM_S2:");
             s2.communication(distribute_by_bound,to_all);
         }
-
-
-    for(auto a:s2.get_results())
-    std::cout<<a<<" ";
+    
+    output=s2.get_results(output);
     std::cout<<std::endl;
 
 /* SUPERSTEP 3 */
-    std::cout<<std::endl;
-    SuperStep<int> s3(nw, s2.get_results());
+    SuperStep<int> s3(nw, s2.get_results(output), false);
         //S1 COMPUTATION PHASE
         s3.reset_barrier();
         {
             Utimer t("COMP_S3:");
-            s3.computation(sort,true);
+            s3.computation(sort);
         }
-
         //S1 COMMUNICATION PHASE
         s3.reset_barrier();
         {
@@ -206,10 +184,9 @@ int main(int argc, char * argv[])
             s3.communication(void_comm,to_itself);
         }
 
-    std::vector<int> result = s3.get_results();
-    
-    for(auto a:result)
-    std::cout<<a<<" ";
+    output=s3.get_results(output);
+    std::vector<int> result = flatten(output);
+    for(auto el : result)
+        std::cout<<el<<" ";
     std::cout<<std::endl;
-
 }

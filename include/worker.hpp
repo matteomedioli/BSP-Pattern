@@ -13,6 +13,11 @@
 #include <algorithm>
 #include "barrier.hpp"
 #include "sharedvect.hpp"
+
+using ComputationFunction = std::function<std::vector<int>(std::vector<int>)>;
+using CommunicationFunction = std::function<std::vector<int>(std::vector<int>, int id, int dest)>;
+using CommunicationProtocol = std::vector<std::pair<int,std::vector<int>>>;
+
 template <typename T>
 class Worker {
     private:
@@ -60,19 +65,10 @@ class Worker {
 
 
         template<typename F, typename ...Args>
-        void work(int nw, std::function<F(Args...)> body, bool chunk, Barrier* barrier)
+        void work(int nw, std::function<F(Args...)> body, Barrier* barrier)
         {
-            thread = std::thread{[this,body,chunk,nw, barrier]()
+            thread = std::thread{[this,body,nw, barrier]()
                 { 
-                    if(chunk)
-                    {
-                        // CHUNCK DISTRIBUTIONworkers
-                        int delta = input.size()/nw;
-                        auto first = input.begin() + id*delta;
-                        auto last = input.begin() + ((id+1)*delta);
-                        std::vector<T> c(first,last);
-                        input=c;
-                    }
                     output = body(input);
                     barrier->wait();
                 }
@@ -81,7 +77,7 @@ class Worker {
         }
         
         template<typename F, typename ...Args>
-        void send(std::function<F(Args...)> body, std::vector<std::pair<int,std::vector<int>>> protocol, Barrier* barrier, const std::vector<std::shared_ptr<SharedVector<T>>>& shared_vector)
+        void send(std::function<F(Args...)> body, CommunicationProtocol protocol, Barrier* barrier, const std::vector<std::shared_ptr<SharedVector<T>>>& shared_vector)
         {
             thread = std::thread{[this,body,protocol,barrier,shared_vector]()
             { 
@@ -90,7 +86,6 @@ class Worker {
                 for(auto dest : destination)
                     {
                         shared_vector[dest]->append(body(output,id,dest));
-                        std::cout<<" send FILTERED from "<<id<<" TO "<<shared_vector[dest]->get_id()<<std::endl<<std::endl;
                     }
                 barrier->wait();
             }};
