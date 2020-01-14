@@ -133,8 +133,7 @@ std::vector<std::vector<int>> output;
         //S1 COMPUTATION PHASE
         s1.reset_barrier();
         {
-            if(verbose)
-                Utimer t("COMP_S1:");
+            Utimer t("COMP_S1:");
             s1.computation(sort_and_separators);
         }
 
@@ -142,8 +141,7 @@ std::vector<std::vector<int>> output;
         s1.reset_barrier();
 
         {
-            if(verbose)
-                Utimer t("COMM_S1:");
+            Utimer t("COMM_S1:");
             s1.communication(void_comm,to_itself);
         }
 
@@ -154,16 +152,14 @@ std::vector<std::vector<int>> output;
         //S1 COMPUTATION PHASE
         s2.reset_barrier();
         {   
-            if(verbose)
-                Utimer t("COMP_S2:");
+            Utimer t("COMP_S2:");
             s2.computation(void_comp);
         }
 
         //S1 COMMUNICATION PHASE
         s2.reset_barrier();
         {
-            if(verbose)
-                Utimer t("COMM_S2:");
+            Utimer t("COMM_S2:");
             s2.communication(distribute_by_bound,to_all);
         }
     
@@ -174,15 +170,13 @@ std::vector<std::vector<int>> output;
         //S1 COMPUTATION PHASE
         s3.reset_barrier();
         {
-            if(verbose)
-                Utimer t("COMP_S3:");
+            Utimer t("COMP_S3:");
             s3.computation(sort);
         }
         //S1 COMMUNICATION PHASE
         s3.reset_barrier();
         {
-            if(verbose)
-                Utimer t("COMM_S3:");
+            Utimer t("COMM_S3:");
             s3.communication(void_comm,to_itself);
         }
 
