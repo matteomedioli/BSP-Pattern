@@ -10,7 +10,7 @@ for par_deg in 1 4 8 16 32 64 128
 do
     for n in 512000 1024000 2048000 4096000 8192000
     do
-        ./main $n $par_deg >> ./test/result.csv
+        ./main $n $par_deg >> ./test/results.csv
     done
 done
 exit 0
