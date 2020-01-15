@@ -39,6 +39,7 @@ int main(int argc, char * argv[])
     int verbose=0;
     if(argc == 4)
         verbose=atoi(argv[3]);
+    std::cout<<n<<","<<nw<<",";
 
 /* GENERATE DATA VECTOR */ 
     std::vector<int> data_vector = generate_data(n);
@@ -126,7 +127,7 @@ int main(int argc, char * argv[])
 
 std::vector<std::vector<int>> output;
 {
-    Utimer t("TISKIN SORT - BSP MODEL:");
+    Utimer t("TISKIN");
 /* SUPERSTEP 1 */
     SuperStep<int> s1(nw,data_vector,true);
         //S1 COMPUTATION PHASE
@@ -178,7 +179,7 @@ std::vector<std::vector<int>> output;
             Utimer t("COMM_S3:");
             s3.communication(void_comm,to_itself);
         }
-    std::cout<<std::endl;
+
     output=s3.get_results(output);
     std::vector<int> result = flatten(output);
 }
