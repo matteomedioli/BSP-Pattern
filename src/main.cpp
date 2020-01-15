@@ -39,7 +39,6 @@ int main(int argc, char * argv[])
     int verbose=0;
     if(argc == 4)
         verbose=atoi(argv[3]);
-    std::cout<<"N: "<<n<<"  PAR. DEGREE: "<<nw<<std::endl;
 
 /* GENERATE DATA VECTOR */ 
     std::vector<int> data_vector = generate_data(n);
@@ -179,7 +178,7 @@ std::vector<std::vector<int>> output;
             Utimer t("COMM_S3:");
             s3.communication(void_comm,to_itself);
         }
-
+    std::cout<<std::endl;
     output=s3.get_results(output);
     std::vector<int> result = flatten(output);
 }
