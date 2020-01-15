@@ -15,5 +15,5 @@ Utimer::~Utimer () {
 	elapsed_time = stop - start;
 	auto usec = std::chrono::duration_cast<usecs>(elapsed_time).count();
 	auto msec = std::chrono::duration_cast<msecs>(elapsed_time).count();
-	std::cout << message << " computed in " << usec << " usec  (" << msec << " milliseconds)" << std::endl;
+	std::cout << msec << " ";
 }
