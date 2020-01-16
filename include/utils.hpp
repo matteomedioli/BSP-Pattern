@@ -24,11 +24,10 @@ T flatten(const std::vector<T>& v) {
 /* GENERATE RANDOM UNIQUE VECTOR OF SIZE N */
 std::vector<int> generate_data(int n)
 {   
-    int num_values = n;
-    std::vector<int> rand_values(num_values);
+    std::vector<int> rand_values(n);
     std::mt19937 eng{std::random_device{}()};
 
-    for(int i = 0; i < num_values; ++i) {
+    for(int i = 0; i < n; ++i) {
         rand_values[i] = i+1;
     }
     std::shuffle(rand_values.begin(), rand_values.end(), eng);
