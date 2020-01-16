@@ -6,7 +6,7 @@
 #ifndef SHAREDVECTOR_H
 #define SHAREDVECTOR_H
 #include <iostream>
-#include<vector>
+#include <vector>
 #include <mutex>
 #include <condition_variable>
 

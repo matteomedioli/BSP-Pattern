@@ -12,15 +12,7 @@
 #include <iostream>
 #include "worker.hpp"
 #include "utimer.hpp"
-
-
-template<typename T, typename = typename T::value_type>
-T flatten(const std::vector<T>& v) {
-    return std::accumulate(v.begin(), v.end(), T{}, [](auto& dest, auto& src) {
-        dest.insert(dest.end(), src.begin(), src.end());
-        return dest;
-    });
-}
+#include "utils.hpp"
 
 template <typename T>
 class SuperStep {
@@ -112,7 +104,7 @@ int SuperStep<T>::computation(std::function<F(Args...)> body)
 {
     for (int id=0; id<nw; id++)
     {   
-        workers[id]->work(nw,body,&barrier);
+        workers[id]->work(body,&barrier);
     }
     sync();
 }

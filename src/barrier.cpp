@@ -1,5 +1,5 @@
 /**
- * \file barrier.hpp
+ * \file barrier.cpp
  * \author Matteo Medioli
  */
 

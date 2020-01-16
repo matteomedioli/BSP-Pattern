@@ -1,28 +1,9 @@
-#include <algorithm>
-#include <random>
+//DEVELOPED LIBRARIES
 #include "../include/utimer.hpp"
 #include "../include/superstep.hpp"
 #include "../include/worker.hpp"
 #include "../include/sharedvect.hpp"
 
-std::vector<int> generate_data(int n)
-{   
-    std::vector<int> data;
-    for (unsigned i = 1; i < n+1; ++i)
-    {
-        unsigned j = rand() % (i + 1);
-
-        if (j < i)
-        {
-            data.push_back(data[j]);
-            data[j] = i;
-        }
-        else
-            data.push_back(i);
-    }
-    return data;
-}
- 
 int main(int argc, char * argv[])
 {
     if(argc<3)
@@ -31,24 +12,35 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-
-
 /* GET ARGS */
     int n=atoi(argv[1]);
     int nw=atoi(argv[2]);
+
+    if(n%nw != 0)
+    {
+        std::cout<<"WRONG ARGUMENT EXCEPT: N must be a multiple of NW par. activies"<<std::endl;
+        return 0;
+    }
+
     int verbose=0;
     if(argc == 4)
         verbose=atoi(argv[3]);
-    std::cout<<n<<","<<nw<<",";
+    if(verbose)
+    {
+        std::cout<<"N:"<<n<<std::endl;
+        std::cout<<"PAR. DEGREE:"<<nw<<std::endl;
+    }
+    else
+        std::cout<<n<<","<<nw<<",";
 
-/* GENERATE DATA VECTOR */ 
-    std::vector<int> data_vector = generate_data(n);
-  
+/* VECTOR READ/GENERATION */
+    std::vector<int> data_vector;
+    data_vector = get_data(n);    
 
 /* COMPUTE TSEQ */
     {
         std::vector<int> seq=data_vector;
-        Utimer t("T_SEQ: ");
+        Utimer t("T_SEQ:",verbose);
         std::sort(seq.begin(), seq.end(), std::less<int>());
     }
 
@@ -107,16 +99,15 @@ int main(int argc, char * argv[])
     };
 
 /* COMMUNICATION PROTOCOLS */
-    CommunicationProtocol to_itself;
+    CommunicationProtocol to_itself; //1-1
+    CommunicationProtocol to_all; //N-N
+
+/* PROTOCOLS INIT */  
     for(int i=0; i<nw; i++)
     {
         std::vector<int> d{i};
         to_itself.push_back(std::make_pair(i,d));
     }
-
-
-    /* COMMUNICATION PROTOCOLS */
-    CommunicationProtocol to_all;
 
     std::vector<int> d;
     for(int i=0; i<nw; i++)
@@ -124,64 +115,64 @@ int main(int argc, char * argv[])
     for(int i=0; i<nw; i++)
         to_all.push_back(std::make_pair(i,d));
 
+/* ------------------------------------  TISKIN SUPERSTEPS SEQUENCE  ------------------------------------ */
 
-std::vector<std::vector<int>> output;
-{
-    Utimer t("TISKIN");
-/* SUPERSTEP 1 */
-    SuperStep<int> s1(nw,data_vector,true);
-        //S1 COMPUTATION PHASE
-        s1.reset_barrier();
-        {
-            Utimer t("COMP_S1:");
-            s1.computation(sort_and_separators);
-        }
+    std::vector<std::vector<int>> output;
+    {
+        Utimer t("TISKIN:",verbose);
+    /* SUPERSTEP 1 */
+        SuperStep<int> s1(nw,data_vector,true);
+            //S1 COMPUTATION PHASE
+            s1.reset_barrier();
+            {
+                Utimer t("COMP_S1:",verbose);
+                s1.computation(sort_and_separators);
+            }
 
-        //S1 COMMUNICATION PHASE
-        s1.reset_barrier();
+            //S1 COMMUNICATION PHASE
+            s1.reset_barrier();
 
-        {
-            Utimer t("COMM_S1:");
-            s1.communication(void_comm,to_itself);
-        }
+            {
+                Utimer t("COMM_S1:",verbose);
+                s1.communication(void_comm,to_itself);
+            }
 
-    output=s1.get_results(output);
+        output=s1.get_results(output); // COST: < 1 msec with 8M data
 
-/* SUPERSTEP 2 */
-    SuperStep<int> s2(nw, output, true);
-        //S1 COMPUTATION PHASE
-        s2.reset_barrier();
-        {   
-            Utimer t("COMP_S2:");
-            s2.computation(void_comp);
-        }
+    /* SUPERSTEP 2 */
+        SuperStep<int> s2(nw, output, true);
+            //S2 COMPUTATION PHASE
+            s2.reset_barrier();
+            {   
+                Utimer t("COMP_S2:",verbose);
+                s2.computation(void_comp);
+            }
 
-        //S1 COMMUNICATION PHASE
-        s2.reset_barrier();
-        {
-            Utimer t("COMM_S2:");
-            s2.communication(distribute_by_bound,to_all);
-        }
-    
-    output=s2.get_results(output);
+            //S2 COMMUNICATION PHASE
+            s2.reset_barrier();
+            {
+                Utimer t("COMM_S2:",verbose);
+                s2.communication(distribute_by_bound,to_all);
+            }
+        
+        output=s2.get_results(output);
 
-/* SUPERSTEP 3 */
-    SuperStep<int> s3(nw, s2.get_results(output), false);
-        //S1 COMPUTATION PHASE
-        s3.reset_barrier();
-        {
-            Utimer t("COMP_S3:");
-            s3.computation(sort);
-        }
-        //S1 COMMUNICATION PHASE
-        s3.reset_barrier();
-        {
-            Utimer t("COMM_S3:");
-            s3.communication(void_comm,to_itself);
-        }
-
-    output=s3.get_results(output);
-    std::vector<int> result = flatten(output);
-}
+    /* SUPERSTEP 3 */
+        SuperStep<int> s3(nw, output, false);
+            //S3 COMPUTATION PHASE
+            s3.reset_barrier();
+            {
+                Utimer t("COMP_S3:",verbose);
+                s3.computation(sort);
+            }
+            //S3 COMMUNICATION PHASE
+            s3.reset_barrier();
+            {
+                Utimer t("COMM_S3:",verbose);
+                s3.communication(void_comm,to_itself);
+            }
+        output=s3.get_results(output);
+        std::vector<int> result = flatten(output); //FLATTEN: COST < 1 msec with 8M data
+    }
 
 }

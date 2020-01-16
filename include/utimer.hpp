@@ -5,10 +5,9 @@
 
 #ifndef UTIMER_H
 #define UTIMER_H
-
-#include <iostream>
 #include <chrono>
-#include <mutex>
+#include <string>
+#include <iostream>
 
 class Utimer {
 	private:
@@ -19,9 +18,10 @@ class Utimer {
 		timepoint stop;
 		std::chrono::duration<double> elapsed_time;
 		std::string message;
+		int verbose;
 		
 	public:
-		Utimer (const std::string m);
+		Utimer (const std::string m, int verbose);
 		~Utimer ();
 };
 

@@ -7,9 +7,7 @@
 #define WORKER_H
 
 #include <functional>
-#include <vector>
 #include <thread>
-#include <iostream>
 #include <algorithm>
 #include "barrier.hpp"
 #include "sharedvect.hpp"
@@ -65,9 +63,9 @@ class Worker {
 
 
         template<typename F, typename ...Args>
-        void work(int nw, std::function<F(Args...)> body, Barrier* barrier)
+        void work(std::function<F(Args...)> body, Barrier* barrier)
         {
-            thread = std::thread{[this,body,nw, barrier]()
+            thread = std::thread{[this,body,barrier]()
                 { 
                     output = body(input);
                     barrier->wait();
