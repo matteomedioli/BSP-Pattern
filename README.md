@@ -29,12 +29,16 @@ for(int i=0; i<nw; i++)
 
 ### Main function
 ```c++
+/* Superstep use */
 SuperStep<int> s1(parallel_degree,data,true);
 s1.reset_barrier();
 s1.computation(comp_body);
 s1.reset_barrier();
 s1.communication(comm_body,one_to_one);
-output=s1.get_results(output);
+
+/* Get result from superstep */
+std::vector<int> output;
+output=flatten(s1.get_results(output));
 
 ```
 ### Compilation and use
